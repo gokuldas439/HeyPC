@@ -24,6 +24,7 @@ BASICS = [
     ("Keep talking", "After each command it keeps listening, so no wake word is needed."),
     ('"Thank you" or "That\'s all"', "Ends the conversation."),
     ('"Jarvis stop"', "Stops at once, even mid-reply or mid-dictation."),
+    ('The small icon above the taskbar', "Blue bars: listening. Amber spinner: working. Green wave: speaking."),
 ]
 
 SECTIONS = [
@@ -134,7 +135,7 @@ def write_pdf() -> None:
     margin = 13 * mm
     gap = 7 * mm
     column = (page_w - 2 * margin - gap) / 2
-    header = 60 * mm
+    header = 68 * mm
     body = page_h - 2 * margin
     first = PageTemplate(id="first", frames=[
         Frame(margin, page_h - margin - header, page_w - 2 * margin, header, 0, 0, 0, 0, id="top"),
@@ -148,7 +149,7 @@ def write_pdf() -> None:
     doc = BaseDocTemplate(str(PDF), pagesize=A4, title="Jarvis voice commands", author="Jarvis open-source project", subject="Command cheat sheet")
     doc.addPageTemplates([first, rest])
 
-    story = [NextPageTemplate("rest"), Paragraph("Jarvis voice commands", TITLE), Spacer(1, 3), Paragraph("Say these in your own words. Everything is free and runs on your Windows PC.", LEAD), Spacer(1, 8)]
+    story = [NextPageTemplate("rest"), Paragraph("Jarvis voice commands", TITLE), Spacer(1, 2), Paragraph("Say these in your own words. " + escaped(TIPS), LEAD), Spacer(1, 8)]
     data = [[Paragraph(escaped(say), SAY), Paragraph(escaped(does), DOES)] for say, does in BASICS]
     basics = Table(data, colWidths=[62 * mm, page_w - 2 * margin - 62 * mm])
     basics.setStyle(TableStyle([
@@ -161,7 +162,6 @@ def write_pdf() -> None:
 
     for name, rows in SECTIONS:
         story.append(KeepTogether([Paragraph(name, HEAD), table(rows, column), Spacer(1, 4)]))
-    story += [Spacer(1, 2), Paragraph("<b>Tips.</b> " + escaped(TIPS), TIP)]
     doc.build(story)
 
 

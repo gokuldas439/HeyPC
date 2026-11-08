@@ -3,197 +3,90 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Jarvis: a free voice assistant for Windows</title>
-<meta name="description" content="Control your Windows PC by voice, dictate into any app and talk to ChatGPT and Claude hands-free. Free and open source, with no subscription or API keys.">
+<title>Jarvis: the free voice assistant for Windows</title>
+<meta name="description" content="Control your Windows PC with your voice. Open apps, type anywhere and ask ChatGPT or Claude hands-free. Free and open source.">
 <meta property="og:title" content="Jarvis: talk to your PC. It talks back.">
-<meta property="og:description" content="A free, open-source voice assistant for Windows. No subscription, no account, no API keys.">
+<meta property="og:description" content="The free, open-source voice assistant for Windows.">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #070c16; --panel: #0f1828; --panel-2: #16233a; --line: #213350;
-    --text: #e8f1ff; --muted: #94a8c6; --cyan: #4fd1ff; --mint: #96f0c8; --amber: #ffc857;
-    --radius: 18px;
-  }
-  * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 400 17px/1.6 Inter, system-ui, sans-serif; overflow-x: hidden; }
-  a { color: inherit; }
-  .wrap { width: min(1120px, 100% - 40px); margin-inline: auto; }
-  h1, h2, h3 { font-family: "Space Grotesk", sans-serif; line-height: 1.08; margin: 0; letter-spacing: -0.02em; }
-
-  nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 0; }
-  .brand { display: flex; align-items: center; gap: 10px; font: 700 20px "Space Grotesk", sans-serif; text-decoration: none; }
-  .ring { width: 22px; height: 22px; border-radius: 50%; border: 4px solid var(--cyan); box-shadow: 0 0 16px rgba(79,209,255,.6); }
-  nav .links { display: flex; gap: 24px; align-items: center; }
-  nav .links a { text-decoration: none; color: var(--muted); font-size: 15px; }
-  nav .links a:hover { color: var(--text); }
-
-  .hero { display: grid; grid-template-columns: 1.08fr .92fr; gap: 56px; align-items: center; padding: 56px 0 96px; }
-  .tag { display: inline-block; color: var(--mint); font-weight: 600; font-size: 14px; margin-bottom: 18px; }
-  h1 { font-size: clamp(44px, 7vw, 80px); }
-  h1 em { font-style: normal; color: var(--cyan); }
-  .lead { color: var(--muted); font-size: 20px; margin: 24px 0 32px; max-width: 34em; }
-  .actions { display: flex; flex-wrap: wrap; gap: 14px; }
-  .btn { display: inline-block; padding: 15px 26px; border-radius: 12px; font-weight: 600; text-decoration: none; }
-  .btn.primary { background: var(--cyan); color: #06121f; }
-  .btn.primary:hover { background: #7ddfff; }
-  .btn.ghost { border: 1px solid var(--line); }
-  .btn.ghost:hover { border-color: var(--cyan); }
-  .fine { color: var(--muted); font-size: 14px; margin-top: 16px; }
-
-  .talk { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; position: relative; }
-  .line { display: flex; gap: 12px; margin-bottom: 16px; opacity: 0; animation: rise .5s forwards; }
-  .line:nth-child(1) { animation-delay: .2s; } .line:nth-child(2) { animation-delay: 1s; }
-  .line:nth-child(3) { animation-delay: 1.9s; } .line:nth-child(4) { animation-delay: 2.7s; }
-  .line:nth-child(5) { animation-delay: 3.6s; } .line:nth-child(6) { animation-delay: 4.4s; }
-  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-  .who { flex: none; width: 54px; font-size: 13px; font-weight: 600; color: var(--muted); padding-top: 3px; }
-  .line.j .who { color: var(--cyan); }
-  .pill { display: flex; width: max-content; margin: 22px auto 0; gap: 5px; align-items: center; height: 38px; padding: 0 20px; border-radius: 99px; background: #0b1220; border: 1px solid var(--line); }
-  .pill i { display: block; width: 4px; height: 8px; border-radius: 4px; background: var(--cyan); animation: wave 1s ease-in-out infinite; }
-  .pill i:nth-child(2) { animation-delay: .12s; } .pill i:nth-child(3) { animation-delay: .24s; }
-  .pill i:nth-child(4) { animation-delay: .36s; } .pill i:nth-child(5) { animation-delay: .48s; }
-  @keyframes wave { 50% { height: 24px; } }
-
-  section { padding: 76px 0; border-top: 1px solid var(--line); }
-  h2 { font-size: clamp(32px, 4.6vw, 50px); margin-bottom: 14px; }
-  .sub { color: var(--muted); max-width: 40em; margin: 0 0 42px; font-size: 19px; }
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; }
-  .card h3 { font-size: 21px; margin-bottom: 10px; }
-  .card p { margin: 0; color: var(--muted); font-size: 16px; }
-  .say { display: block; color: var(--cyan); font-size: 15px; font-weight: 500; margin-top: 14px; }
-
-  .split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  ul.check { list-style: none; margin: 0; padding: 0; }
-  ul.check li { padding: 10px 0 10px 26px; position: relative; color: var(--muted); border-bottom: 1px solid var(--line); }
-  ul.check li:last-child { border: 0; }
-  ul.check li::before { content: ""; position: absolute; left: 2px; top: 19px; width: 9px; height: 9px; border-radius: 50%; background: var(--mint); }
-  ul.check strong { color: var(--text); font-weight: 600; }
-
-  ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  ol.steps li { counter-increment: s; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; color: var(--muted); }
-  ol.steps li::before { content: counter(s); display: block; font: 700 34px "Space Grotesk", sans-serif; color: var(--amber); margin-bottom: 10px; }
-  ol.steps strong { color: var(--text); display: block; margin-bottom: 4px; }
-
-  .end { text-align: center; padding: 96px 0; }
-  .end .actions { justify-content: center; margin-top: 30px; }
-  footer { border-top: 1px solid var(--line); padding: 34px 0; color: var(--muted); font-size: 14px; }
-  footer p { margin: 0 0 8px; }
-
-  @media (max-width: 860px) {
-    .hero, .split { grid-template-columns: 1fr; gap: 36px; }
-    .grid, ol.steps { grid-template-columns: 1fr; }
-    .hero { padding: 24px 0 64px; }
-    nav .links a.hide { display: none; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .line { animation: none; opacity: 1; }
-    .pill i { animation: none; height: 16px; }
-    html { scroll-behavior: auto; }
-  }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site.css">
 </head>
 <body>
+<div class="orb a"></div><div class="orb b"></div>
 <div class="wrap">
-  <nav>
-    <a class="brand" href="#"><span class="ring"></span>Jarvis</a>
-    <div class="links">
-      <a class="hide" href="#features">Features</a>
-      <a class="hide" href="#privacy">Privacy</a>
-      <a class="hide" href="https://gokuldas439.github.io/jarvis-demo/">See it work</a>
-      <a class="hide" href="Jarvis-Commands.pdf">Commands (PDF)</a>
-      <a href="https://github.com/gokuldas439/voice-jarvis">GitHub</a>
+  <nav class="top glass">
+    <a class="brand" href="index.html"><span class="ring"></span>Jarvis</a>
+    <div class="menu">
+      <a class="opt" href="#features">Features</a>
+      <a class="opt" href="#trust">Trust</a>
+      <a class="opt" href="#faq">FAQ</a>
+      <a class="btn solid small" href="download.html">Download</a>
     </div>
   </nav>
 
   <header class="hero">
-    <div>
-      <span class="tag">Free and open source, for Windows</span>
-      <h1>Talk to your PC. <em>It talks back.</em></h1>
-      <p class="lead">Open apps, dictate into anything, and ask ChatGPT or Claude without touching the keyboard. No subscription, no account, no API keys.</p>
-      <div class="actions">
-        <a class="btn primary" href="https://github.com/gokuldas439/voice-jarvis/releases/latest/download/Jarvis-Setup.exe">Download for Windows</a>
-        <a class="btn ghost" href="https://github.com/gokuldas439/voice-jarvis">View the code</a>
-      </div>
-      <p class="fine">About 700 MB, speech models included. Tested on Windows 11.</p>
-    </div>
-    <!-- To feature a demo video, replace this panel with a <video> element. -->
-    <div class="talk" aria-label="Example conversation with Jarvis">
-      <div class="line"><span class="who">You</span><span>Hey Jarvis.</span></div>
-      <div class="line j"><span class="who">Jarvis</span><span>Good morning. What are we going to do today?</span></div>
-      <div class="line"><span class="who">You</span><span>Start work.</span></div>
-      <div class="line j"><span class="who">Jarvis</span><span>Getting your workspace ready.</span></div>
-      <div class="line"><span class="who">You</span><span>Remind me in 20 minutes to call Rahul.</span></div>
-      <div class="line j"><span class="who">Jarvis</span><span>I'll remind you at 9:50 AM.</span></div>
-      <div class="pill" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+    <h1>Talk to your PC.<br><span>It talks back.</span></h1>
+    <p>The voice assistant Windows should have come with. Open apps, type anywhere and get answers, without touching the keyboard.</p>
+    <div class="cta-row">
+      <a class="btn solid" href="download.html">Download for Windows</a>
+      <a class="btn" href="https://github.com/gokuldas439/voice-jarvis" target="_blank" rel="noopener">View on GitHub</a>
     </div>
   </header>
 
+  <div class="show glass"><iframe id="demo" src="demo.html?embed" title="Animated demo of Jarvis" loading="lazy"></iframe></div>
+
+  <div class="band glass">
+    <div><b class="grad">Free</b><span>No subscription, ever</span></div>
+    <div><b class="grad">0</b><span>Accounts or API keys</span></div>
+    <div><b class="grad">40+</b><span>Things you can say</span></div>
+    <div><b class="grad">100%</b><span>Open source</span></div>
+  </div>
+
   <section id="features">
-    <h2>Your keyboard can take a break</h2>
-    <p class="sub">Say the wake word once, then keep talking. Jarvis waits for your next command.</p>
-    <div class="grid">
-      <div class="card"><h3>Type anywhere</h3><p>Hold Right Ctrl, talk, and let go. Your words appear in whatever app you're using.</p><span class="say">Hold Right Ctrl and speak</span></div>
-      <div class="card"><h3>Ask AI hands-free</h3><p>Your question goes to the ChatGPT or Claude you already use, and Jarvis reads the answer as it arrives.</p><span class="say">"Ask Claude to explain this error"</span></div>
-      <div class="card"><h3>One-phrase routines</h3><p>Choose what opens when you start your day: project folders, browser profiles and apps.</p><span class="say">"Start work"</span></div>
-      <div class="card"><h3>Control any app</h3><p>Open, close, minimize and switch windows. Jump to a tab by name, even when it's buried.</p><span class="say">"Go to the Gmail tab"</span></div>
-      <div class="card"><h3>Reminders and timers</h3><p>Spoken out loud and saved, so they still reach you after a restart.</p><span class="say">"Remind me at 5 PM to call Rahul"</span></div>
-      <div class="card"><h3>Built for developers</h3><p>Run commands you've approved in any project and hear the result.</p><span class="say">"Git status in backend"</span></div>
-      <div class="card"><h3>Messages and email</h3><p>Draft to a contact on WhatsApp or Slack, or reply to an email. It asks before anything is sent.</p><span class="say">"Message Rahul saying I'm running late"</span></div>
-      <div class="card"><h3>Find and calculate</h3><p>Pull up files by name, paste from your clipboard history, and do quick sums.</p><span class="say">"What's 18 percent of 2500?"</span></div>
-      <div class="card"><h3>A voice you'll like</h3><p>Choose from natural voices, set what it calls you, and even change the wake word.</p><span class="say">"Hey Jarvis" or your own</span></div>
+    <div class="head"><h2>Do more by saying less</h2><p>Say "Hey Jarvis" once and keep talking.</p></div>
+    <div class="cards">
+      <article class="card glass"><h3>Open anything</h3><p>Launch apps and bring back minimized windows instantly.</p><em>"Open Claude"</em></article>
+      <article class="card glass"><h3>Type anywhere</h3><p>Hold one key, speak, and your words appear in any app.</p><em>Hold Right Ctrl</em></article>
+      <article class="card glass"><h3>Ask AI hands-free</h3><p>Ask ChatGPT or Claude and hear the answer as it arrives.</p><em>"Ask Claude what's an SIP"</em></article>
+      <article class="card glass"><h3>Start your day</h3><p>One phrase opens your projects, browser and apps.</p><em>"Start work"</em></article>
+      <article class="card glass"><h3>Never forget</h3><p>Reminders and timers that speak up when it's time.</p><em>"Remind me at 5 to call Rahul"</em></article>
+      <article class="card glass"><h3>Run your PC</h3><p>Switch tabs, close apps, lock the screen, find files.</p><em>"Go to the Gmail tab"</em></article>
     </div>
   </section>
 
-  <section id="privacy">
-    <h2>Your voice stays on your PC</h2>
-    <p class="sub">Listening and understanding run on your computer. Here is exactly what that means.</p>
-    <div class="split">
-      <div class="card">
-        <ul class="check">
-          <li><strong>Audio is never uploaded or saved.</strong> Speech recognition runs locally.</li>
-          <li><strong>No accounts or telemetry.</strong> There's nothing to sign up for.</li>
-          <li><strong>Open source.</strong> Read every line on GitHub.</li>
-          <li><strong>Online voices are optional.</strong> They send only the sentence Jarvis is about to say to Microsoft's read-aloud service. Pick an offline voice to send nothing.</li>
-        </ul>
-      </div>
-      <div class="card">
-        <ul class="check">
-          <li><strong>It asks first.</strong> Messages, shutdown and risky clicks need a spoken "yes".</li>
-          <li><strong>You control the terminal.</strong> Only commands on your own list can run.</li>
-          <li><strong>Programs never launch from a search.</strong> They're shown in their folder instead.</li>
-          <li><strong>"Jarvis stop" always works,</strong> even while it's talking.</li>
-        </ul>
-      </div>
+  <section id="trust">
+    <div class="head"><h2>Built to be trusted</h2><p>A microphone app has to earn it. Here's how Jarvis does.</p></div>
+    <div class="trust">
+      <article class="card glass"><h3>Your voice stays on your PC</h3><p>Speech is understood on your own computer. Audio is never uploaded or saved.</p></article>
+      <article class="card glass"><h3>Every line is public</h3><p>Open source under GPL-3.0, so anyone can check exactly what it does.</p></article>
+      <article class="card glass"><h3>Nothing to sign up for</h3><p>No account, no tracking, no analytics, no data to sell.</p></article>
+      <article class="card glass"><h3>It asks before it acts</h3><p>Sending a message, shutting down or deleting needs your spoken yes.</p></article>
     </div>
   </section>
 
-  <section>
-    <h2>Running in minutes</h2>
-    <p class="sub">Windows may warn you because the installer isn't code-signed. Choose More info, then Run anyway.</p>
-    <ol class="steps">
-      <li><strong>Install</strong>Download the setup file and run it.</li>
-      <li><strong>Make it yours</strong>Set your name, a voice and what "Start work" opens.</li>
-      <li><strong>Say "Hey Jarvis"</strong>Watch for the small animation above your taskbar.</li>
-    </ol>
+  <section id="faq" class="faq">
+    <div class="head"><h2>Questions</h2></div>
+    <details class="glass"><summary>Is it really free?</summary><p>Yes. There's no paid plan, no trial and no API key to buy.</p></details>
+    <details class="glass"><summary>Does it need the internet?</summary><p>Understanding your voice works offline. The natural voices are online and send only the sentence Jarvis is about to say to Microsoft's read-aloud service. You can pick an offline voice in Settings. Web search and ChatGPT or Claude need the internet too.</p></details>
+    <details class="glass"><summary>Why does Windows show a warning when I install it?</summary><p>The installer isn't code-signed, because signing certificates cost money. Choose More info, then Run anyway. The full source code is on GitHub if you'd like to check it first.</p></details>
+    <details class="glass"><summary>What do I need to run it?</summary><p>Windows 11 and a microphone. It's about 700 MB because the speech models come included. 8 GB of RAM is recommended.</p></details>
+    <details class="glass"><summary>Which languages does it understand?</summary><p>English for now.</p></details>
   </section>
 
-  <div class="end">
-    <h2>Free. Today and always.</h2>
-    <div class="actions">
-      <a class="btn primary" href="https://github.com/gokuldas439/voice-jarvis/releases/latest/download/Jarvis-Setup.exe">Download for Windows</a>
-      <a class="btn ghost" href="https://github.com/gokuldas439/voice-jarvis">Star on GitHub</a>
-    </div>
+  <div class="final glass">
+    <h2>Say hello to <span class="grad">Jarvis</span></h2>
+    <p>Free for Windows. Set up in minutes.</p>
+    <a class="btn solid" href="download.html">Download for Windows</a>
   </div>
 
   <footer>
-    <p>Released under GPL-3.0. Some bundled models have their own terms, including non-commercial use for the wake-word models. See the <a href="https://github.com/gokuldas439/voice-jarvis/blob/main/THIRD_PARTY_NOTICES.md">third-party notices</a>.</p>
-    <p>Jarvis is an independent open-source project, not affiliated with Marvel, Disney, Microsoft, OpenAI, Anthropic or Google.</p>
+    <a class="brand" href="index.html"><span class="ring"></span>Jarvis</a>
+    <div class="social"></div>
   </footer>
+  <p class="legal">Jarvis is an independent open-source project, not affiliated with Marvel, Disney, Microsoft, OpenAI, Anthropic or Google. Some bundled models have their own terms: see the <a href="https://github.com/gokuldas439/voice-jarvis/blob/main/THIRD_PARTY_NOTICES.md">notices</a>.</p>
 </div>
+<script src="site.js"></script>
 </body>
 </html>

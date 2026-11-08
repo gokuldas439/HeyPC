@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How Jarvis works: a voice assistant for Windows</title>
+<meta name="description" content="See what happens on your screen when you talk to Jarvis, the free open-source voice assistant for Windows.">
+<meta property="og:title" content="See Jarvis in action">
+<meta property="og:description" content="Say it. Watch it happen. A free, open-source voice assistant for Windows.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--cyan:#4fd1ff;--amber:#ffc857;--mint:#96f0c8;--violet:#a78bfa;--text:#f4f7fb;--muted:#8f97a6;--glass:rgba(255,255,255,.055);--glass-2:rgba(255,255,255,.1);--edge:rgba(255,255,255,.14)}
+*{box-sizing:border-box}
+html{background:#000}
+body{margin:0;background:#000;color:var(--text);font:400 16px/1.55 Inter,system-ui,sans-serif;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+.orb{position:fixed;border-radius:50%;filter:blur(110px);opacity:.34;pointer-events:none;z-index:0;animation:drift 22s ease-in-out infinite alternate}
+.orb.a{width:560px;height:560px;background:#0f6d9c;left:-160px;top:-140px}
+.orb.b{width:520px;height:520px;background:#4b2ea8;right:-180px;top:30vh;animation-delay:-8s}
+.orb.c{width:420px;height:420px;background:#0d7a5f;left:32vw;bottom:-200px;animation-delay:-14s}
+@keyframes drift{to{transform:translate(70px,50px) scale(1.14)}}
+.page{position:relative;z-index:1;width:min(1240px,100% - 32px);margin-inline:auto}
+.glass{background:var(--glass);border:1px solid var(--edge);backdrop-filter:blur(22px) saturate(1.4);-webkit-backdrop-filter:blur(22px) saturate(1.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 24px 60px rgba(0,0,0,.55)}
+nav{display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding:12px 20px;border-radius:18px}
+.brand{display:flex;gap:10px;align-items:center;font:700 19px Sora,sans-serif}
+.dot{width:18px;height:18px;border-radius:50%;border:3.5px solid var(--cyan);box-shadow:0 0 14px var(--cyan)}
+nav div.r{display:flex;gap:10px;align-items:center}
+.btn{display:inline-block;padding:9px 16px;border-radius:11px;font-weight:600;font-size:14px;border:1px solid var(--edge);background:var(--glass-2)}
+.btn:hover{border-color:var(--cyan)}
+.btn.solid{background:var(--text);color:#000;border-color:var(--text)}
+.btn.solid:hover{background:var(--cyan);border-color:var(--cyan)}
+header.top{text-align:center;padding:50px 0 26px}
+h1{font:700 clamp(38px,6.4vw,74px)/1.04 Sora,sans-serif;letter-spacing:-.03em;margin:0}
+h1 span{background:linear-gradient(100deg,var(--cyan),var(--mint) 60%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+header.top p{color:var(--muted);font-size:clamp(16px,2vw,20px);margin:14px auto 0;max-width:36em}
+
+.rail{display:flex;gap:8px;overflow-x:auto;padding:10px;border-radius:18px;margin-bottom:12px;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.chip{flex:none;font:600 14px Inter,sans-serif;color:var(--muted);padding:9px 15px;border-radius:11px;border:1px solid transparent;background:none;cursor:pointer;white-space:nowrap}
+.chip:hover{color:var(--text)}
+.chip.on{color:#000;background:var(--text)}
+
+.frame{border-radius:24px;padding:10px;position:relative}
+.viewport{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:16px;background:#000}
+#stage{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0;overflow:hidden;background:radial-gradient(760px 480px at 18% 12%,rgba(30,120,170,.42),transparent 70%),radial-gradient(700px 520px at 88% 30%,rgba(95,60,200,.36),transparent 72%),radial-gradient(640px 400px at 52% 108%,rgba(20,140,110,.3),transparent 70%),#000}
+.caps{display:none;padding:10px 8px 2px;min-height:78px}
+.caps p{margin:0 0 4px;font:500 17px/1.3 Sora,sans-serif;opacity:0;transition:opacity .2s}
+.caps p.on{opacity:1}
+.caps small{display:inline-block;width:56px;font:600 11px Inter,sans-serif;letter-spacing:.08em;text-transform:uppercase}
+.caps .y small{color:var(--cyan)}.caps .j small{color:var(--mint)}
+.progress{height:3px;border-radius:3px;background:rgba(255,255,255,.1);margin:10px 8px 2px;overflow:hidden}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--mint))}
+
+.taskbar{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:6px;padding:7px 12px;border-radius:16px;z-index:40;height:58px;align-items:center}
+.ico{position:relative;width:42px;height:42px;border-radius:11px;display:grid;place-items:center;font:700 19px Sora,sans-serif;color:#fff;transition:transform .25s,box-shadow .25s}
+.ico::after{content:"";position:absolute;bottom:-5px;left:50%;width:0;height:3px;border-radius:3px;background:#fff;transform:translateX(-50%);transition:width .25s,background .25s}
+.ico.run::after{width:7px;background:rgba(255,255,255,.55)}
+.ico.act::after{width:18px;background:var(--cyan)}
+.ico.bump{animation:bump .55s}
+@keyframes bump{40%{transform:translateY(-11px) scale(1.12)}}
+
+#pill{position:absolute;left:50%;bottom:84px;width:116px;height:50px;margin-left:-58px;border-radius:99px;z-index:60;background:rgba(9,14,24,.82);border:1px solid rgba(255,255,255,.16);backdrop-filter:blur(14px);box-shadow:0 10px 34px rgba(0,0,0,.6);display:grid;place-items:center;transition:opacity .25s,transform .25s;opacity:0;transform:translateY(10px) scale(.92)}
+#pill.show{opacity:1;transform:none}
+#pill>div{grid-area:1/1;display:flex;gap:6px;align-items:center;opacity:0;transition:opacity .15s}
+#pill.quiet .bars,#pill.voice .bars,#pill.working .arc,#pill.speaking .wave{opacity:1}
+.bars i{display:block;width:6px;height:6px;border-radius:6px;background:var(--cyan);transition:height .12s}
+#pill.quiet .bars i{animation:breathe 1.5s ease-in-out infinite}
+#pill.voice .bars i{animation:talk .42s ease-in-out infinite alternate}
+.bars i:nth-child(2){animation-delay:.09s!important}.bars i:nth-child(3){animation-delay:.2s!important}.bars i:nth-child(4){animation-delay:.05s!important}.bars i:nth-child(5){animation-delay:.15s!important}
+@keyframes breathe{50%{transform:scale(1.35);opacity:.7}}
+@keyframes talk{from{height:8px}to{height:32px}}
+.arc i{display:block;width:26px;height:26px;border-radius:50%;border:4px solid rgba(255,200,87,.2);border-top-color:var(--amber);border-right-color:var(--amber);animation:spin .75s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wave{gap:4px!important}.wave i{display:block;width:4.5px;border-radius:5px;background:var(--mint);height:8px;animation:flow .7s ease-in-out infinite alternate}
+.wave i:nth-child(1),.wave i:nth-child(7){animation-delay:.42s;--h:12px}.wave i:nth-child(2),.wave i:nth-child(6){animation-delay:.28s;--h:20px}.wave i:nth-child(3),.wave i:nth-child(5){animation-delay:.14s;--h:28px}.wave i:nth-child(4){--h:36px}
+@keyframes flow{to{height:var(--h,20px)}}
+
+.say{position:absolute;left:50%;z-index:70;display:flex;gap:12px;align-items:center;padding:13px 22px;border-radius:18px;max-width:880px;font:500 25px/1.3 Sora,sans-serif;opacity:0;transform:translate(-50%,-12px) scale(.97);transition:opacity .25s,transform .25s;white-space:nowrap}
+.say.on{opacity:1;transform:translate(-50%,0)}
+.say small{font:600 12px Inter,sans-serif;letter-spacing:.09em;text-transform:uppercase}
+#you{top:26px}#you small{color:var(--cyan)}
+#reply{top:84px;font-size:21px;font-weight:400}#reply small{color:var(--mint)}
+.w{opacity:.2;transition:opacity .14s}.w.lit{opacity:1}
+
+#key{position:absolute;left:44px;bottom:90px;z-index:65;padding:12px 18px;border-radius:13px;font:600 18px Sora,sans-serif;opacity:0;transform:translateY(12px);transition:opacity .25s,transform .13s,box-shadow .13s}
+#key.show{opacity:1;transform:none}
+#key.down{transform:translateY(6px);box-shadow:0 0 34px rgba(79,209,255,.7),inset 0 0 0 1.5px var(--cyan)}
+
+.win{position:absolute;border-radius:16px;overflow:hidden;background:rgba(18,20,27,.68);border:1px solid var(--edge);backdrop-filter:blur(26px) saturate(1.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 30px 70px rgba(0,0,0,.65);transition:transform .42s cubic-bezier(.2,.9,.25,1.05),opacity .32s,box-shadow .3s;display:flex;flex-direction:column}
+.win.off{opacity:0;transform:translate(var(--tx),var(--ty)) scale(.08)}
+.win.gone{opacity:0;transform:scale(.9)}
+.win.front{box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 34px 90px rgba(0,0,0,.75),0 0 0 1px rgba(79,209,255,.34)}
+.bar{display:flex;align-items:center;gap:9px;height:38px;padding:0 13px;flex:none;font:600 13.5px Inter,sans-serif;border-bottom:1px solid rgba(255,255,255,.08)}
+.bar b{width:17px;height:17px;border-radius:5px;display:grid;place-items:center;font:700 10.5px Sora,sans-serif}
+.ctl{margin-left:auto;display:flex;gap:15px;color:var(--muted);font-size:13px}
+.body{flex:1;min-height:0;display:flex;flex-direction:column}
+
+.chat{flex:1;padding:18px 26px;display:flex;flex-direction:column;justify-content:flex-end;gap:12px;min-height:0;overflow:hidden}
+.msg{max-width:80%;padding:11px 15px;border-radius:14px;font-size:15.5px;animation:pop .3s}
+.msg.u{align-self:flex-end;background:rgba(79,209,255,.18);border:1px solid rgba(79,209,255,.3)}
+.msg.a{align-self:flex-start;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09)}
+@keyframes pop{from{opacity:0;transform:translateY(9px)}}
+.box{margin:0 20px 18px;padding:13px 16px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid var(--edge);font-size:15.5px;min-height:49px;display:flex;align-items:center;flex:none}
+.caret{display:inline-block;width:2px;height:19px;background:var(--cyan);margin-left:2px;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.ph{color:var(--muted)}
+.tabs{display:flex;gap:4px;padding:7px 9px 0;flex:none}
+.tab{padding:7px 15px;border-radius:9px 9px 0 0;font-size:13px;color:var(--muted);transition:background .25s,color .25s,opacity .3s,transform .3s}
+.tab.on{background:rgba(255,255,255,.11);color:var(--text)}
+.tab.flash{box-shadow:inset 0 0 0 1.5px var(--cyan);color:var(--text)}
+.tab.bye{opacity:0;transform:scale(.8)}
+.url{margin:8px 12px;padding:8px 14px;border-radius:9px;background:rgba(255,255,255,.07);font-size:14px;min-height:36px;flex:none}
+.page-v{flex:1;padding:12px 24px;overflow:hidden}
+.res{padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07);animation:pop .35s both}
+.res b{display:block;color:#8fd8ff;font-weight:500;font-size:16.5px}.res span{color:var(--muted);font-size:13.5px}
+.code{flex:1;padding:16px 20px;font:13.5px/2 ui-monospace,Consolas,monospace;color:#b8c1d1}
+.code i{font-style:normal;color:var(--violet)}.code u{text-decoration:none;color:var(--mint)}
+.music{flex:1;display:grid;place-items:center;text-align:center;color:var(--muted);font-size:14px}
+.music b{display:block;width:96px;height:96px;margin:0 auto 12px;border-radius:14px;background:linear-gradient(135deg,#1db954,#0a4a26)}
+
+.toast{position:absolute;right:18px;bottom:88px;width:310px;padding:14px 17px;border-radius:15px;z-index:66;transform:translateX(350px);transition:transform .45s cubic-bezier(.2,.9,.25,1.1)}
+.toast.on{transform:none}
+.toast b{display:block;font-size:13px;color:var(--amber);margin-bottom:3px}
+.clock{position:absolute;top:150px;left:50%;transform:translateX(-50%);font:300 66px Sora,sans-serif;opacity:0;transition:opacity .3s;z-index:30;text-shadow:0 0 34px rgba(79,209,255,.5)}
+.clock.on{opacity:1}
+
+.cta{text-align:center;padding:40px 22px;border-radius:24px;margin-bottom:26px}
+.cta h2{font:700 clamp(26px,4vw,42px)/1.1 Sora,sans-serif;margin:0 0 18px;letter-spacing:-.02em}
+.cta div{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+footer{color:var(--muted);font-size:13px;text-align:center;padding:0 0 30px}
+@media(max-width:760px){.caps{display:block}#you,#reply{display:none}header.top{padding:34px 0 18px}nav .hide{display:none}}
+@media(prefers-reduced-motion:reduce){.orb,.bars i,.wave i,.arc i{animation:none!important}.win,.say,#pill,.toast{transition:none}}
+body.embed .orb,body.embed nav,body.embed header.top,body.embed .cta,body.embed footer{display:none}
+body.embed .page{width:100%}
+body.embed .frame{background:none;border:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;padding:0}
+body.embed .rail{margin-top:0}
+body.embed,html:has(body.embed){background:transparent}
+</style>
+</head>
+<body>
+<div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
+<div class="page">
+  <nav class="glass">
+    <a class="brand" href="#"><span class="dot"></span>Jarvis</a>
+    <div class="r">
+      <a class="btn hide" href="https://github.com/gokuldas439/voice-jarvis">GitHub</a>
+      <a class="btn solid" href="https://github.com/gokuldas439/voice-jarvis/releases/latest/download/Jarvis-Setup.exe">Download free</a>
+    </div>
+  </nav>
+  <header class="top">
+    <h1>Say it. <span>Watch it happen.</span></h1>
+    <p>This is what appears on your Windows screen when you talk to Jarvis. Pick any command below.</p>
+  </header>
+
+  <div class="rail glass" id="rail" role="tablist" aria-label="Choose a command to watch"></div>
+  <div class="frame glass">
+    <div class="viewport" id="viewport">
+      <div id="stage" aria-hidden="true">
+        <div class="clock" id="clock"></div>
+        <div id="wins"></div>
+        <div class="say glass" id="you"><small>You</small><span id="youT"></span></div>
+        <div class="say glass" id="reply"><small>Jarvis</small><span id="replyT"></span></div>
+        <div class="glass" id="key">Right Ctrl</div>
+        <div class="toast glass" id="toast"><b>Reminder</b><span id="toastT"></span></div>
+        <div id="pill"><div class="bars"><i></i><i></i><i></i><i></i><i></i></div><div class="arc"><i></i></div><div class="wave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+        <div class="taskbar glass" id="taskbar"></div>
+      </div>
+    </div>
+    <div class="caps" aria-live="polite"><p class="y" id="capY"><small>You</small><span></span></p><p class="j" id="capJ"><small>Jarvis</small><span></span></p></div>
+    <div class="progress"><i id="prog"></i></div>
+  </div>
+
+  <section class="cta glass">
+    <h2>Free. Open source. No API keys.</h2>
+    <div>
+      <a class="btn solid" href="https://github.com/gokuldas439/voice-jarvis/releases/latest/download/Jarvis-Setup.exe">Download for Windows</a>
+      <a class="btn" href="https://github.com/gokuldas439/voice-jarvis/blob/main/docs/Jarvis-Commands.pdf">All commands (PDF)</a>
+      <a class="btn" href="https://github.com/gokuldas439/voice-jarvis">View the code</a>
+    </div>
+  </section>
+  <footer>An illustration of the real app. Jarvis is an independent open-source project, not affiliated with Marvel, Disney, OpenAI, Anthropic, Google or Spotify.</footer>
+</div>
+
+<script>
+if (location.search.includes('embed')) {
+  document.body.classList.add('embed');
+  const tell = () => parent.postMessage({ demoHeight: document.documentElement.scrollHeight }, '*');
+  new ResizeObserver(tell).observe(document.body); addEventListener('load', tell);
+}
+const $ = s => document.querySelector(s);
+const STOP = Symbol('stop');
+let token = 0;
+const sleep = ms => { const t = token; return new Promise((ok, no) => setTimeout(() => t === token ? ok() : no(STOP), ms)); };
+const APPS = {
+  claude:  {l:'C', c:'linear-gradient(135deg,#d97757,#a4502f)', n:'Claude'},
+  chrome:  {l:'G', c:'linear-gradient(135deg,#4285f4,#34a853)', n:'Chrome'},
+  spotify: {l:'S', c:'linear-gradient(135deg,#1db954,#0f7a37)', n:'Spotify'},
+  code:    {l:'<>', c:'linear-gradient(135deg,#6b7cff,#3346c8)', n:'Code editor'},
+  notes:   {l:'N', c:'linear-gradient(135deg,#ffc857,#d48a16)', n:'Notes'},
+  term:    {l:'>_', c:'linear-gradient(135deg,#3a3f4b,#191c22)', n:'Terminal'},
+};
+const open = {};
+const bar = $('#taskbar');
+Object.entries(APPS).forEach(([id, a]) => { const d = document.createElement('div'); d.className = 'ico'; d.id = 'i-' + id; d.textContent = a.l; d.style.background = a.c; d.style.fontSize = a.l.length > 1 ? '14px' : ''; bar.append(d); });
+
+function setPill(state) { const p = $('#pill'); p.className = state ? 'show ' + state : ''; }
+function hideSay() { $('#you').classList.remove('on'); $('#reply').classList.remove('on'); }
+async function you(text) {
+  $('#reply').classList.remove('on');
+  const span = $('#youT'); span.innerHTML = text.split(' ').map(w => `<span class="w">${w}</span>`).join(' ');
+  $('#you').classList.add('on'); setPill('voice');
+  await sleep(180);
+  for (const w of span.children) { w.classList.add('lit'); await sleep(Math.max(150, w.textContent.length * 48)); }
+  await sleep(260);
+}
+async function think(ms = 520) { setPill('working'); await sleep(ms); }
+async function jarvis(text, hold) {
+  $('#replyT').textContent = text; $('#reply').classList.add('on'); setPill('speaking');
+  await sleep(hold || Math.max(1100, text.length * 58));
+  setPill('quiet');
+}
+function iconPoint(id) { const i = $('#i-' + id); return { x: i.offsetLeft + bar.offsetLeft - bar.offsetWidth / 2 + 21, y: 720 - 40 }; }
+function focusWin(id) { Object.keys(open).forEach(k => { open[k].el.classList.toggle('front', k === id); $('#i-' + k).classList.toggle('act', k === id); open[k].el.style.zIndex = k === id ? 20 : 10; }); }
+function makeWin(id, x, y, w, h, body, instant, title) {
+  const a = APPS[id], el = document.createElement('div');
+  el.className = 'win'; el.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px;z-index:20`;
+  const p = iconPoint(id); el.style.setProperty('--tx', (p.x - x - w / 2) + 'px'); el.style.setProperty('--ty', (p.y - y - h / 2) + 'px');
+  el.innerHTML = `<div class="bar"><b style="background:${a.c}">${a.l.length > 1 ? '' : a.l}</b>${title || a.n}<span class="ctl"><span>&#8211;</span><span>&#9633;</span><span>&#10005;</span></span></div><div class="body">${body}</div>`;
+  if (!instant) el.classList.add('off');
+  $('#wins').append(el); open[id] = { el, id };
+  $('#i-' + id).classList.add('run');
+  return el;
+}
+async function openWin(id, x, y, w, h, body, title) {
+  const ic = $('#i-' + id); ic.classList.remove('bump'); void ic.offsetWidth; ic.classList.add('bump');
+  await sleep(240);
+  const el = makeWin(id, x, y, w, h, body, false, title);
+  void el.offsetWidth; el.classList.remove('off'); focusWin(id);
+  await sleep(480); return el;
+}
+function instant(id, x, y, w, h, body, title) { const el = makeWin(id, x, y, w, h, body, true, title); focusWin(id); return el; }
+async function closeWin(id) { const o = open[id]; if (!o) return; o.el.classList.add('gone'); $('#i-' + id).classList.remove('run', 'act'); await sleep(340); o.el.remove(); delete open[id]; }
+async function minWin(id) { const o = open[id]; o.el.classList.add('off'); $('#i-' + id).classList.remove('act'); await sleep(450); }
+async function typeInto(el, text, speed = 30) {
+  el.innerHTML = '<span></span><i class="caret"></i>'; const s = el.firstChild;
+  for (const ch of text) { s.textContent += ch; await sleep(speed); }
+}
+const chatHTML = `<div class="chat"></div><div class="box"><span class="ph">Reply to Claude...</span></div>`;
+const browserHTML = (tabs, on) => `<div class="tabs">${tabs.map((t, i) => `<div class="tab${i === on ? ' on' : ''}" data-t="${t}">${t}</div>`).join('')}</div><div class="url">google.com</div><div class="page-v"></div>`;
+const codeHTML = name => `<div class="code"><i>import</i> { login } <i>from</i> <u>'./${name}/auth'</u><br><br><i>export async function</i> start() {<br>&nbsp;&nbsp;<i>await</i> login()<br>}</div>`;
+function addMsg(win, cls, text) { const m = document.createElement('div'); m.className = 'msg ' + cls; m.textContent = text; win.querySelector('.chat').append(m); return m; }
+
+const scenes = [
+  {id:'wake', label:'Hey Jarvis', run: async () => {
+    await sleep(500);
+    await you('Hey Jarvis');
+    await sleep(160); await jarvis('Good morning, Alex. What are we going to do today?');
+    await sleep(1400);
+  }},
+  {id:'open', label:'Open an app', run: async () => {
+    setPill('quiet'); await sleep(450);
+    await you('Open Claude'); await think();
+    $('#replyT').textContent = 'Opening Claude.'; $('#reply').classList.add('on'); setPill('speaking');
+    const w = await openWin('claude', 250, 142, 780, 436, chatHTML);
+    addMsg(w, 'a', 'Hi! How can I help you today?');
+    await sleep(1000); setPill('quiet'); await sleep(900);
+  }},
+  {id:'type', label:'Type and send', run: async () => {
+    const w = instant('claude', 250, 142, 780, 436, chatHTML); addMsg(w, 'a', 'Hi! How can I help you today?');
+    setPill('quiet'); await sleep(500);
+    await you('Type'); await jarvis('Go ahead.', 650);
+    await you('Fix the login page and add tests');
+    setPill('working'); hideSay();
+    const box = w.querySelector('.box'); await typeInto(box, 'Fix the login page and add tests.');
+    setPill('quiet'); await sleep(750);
+    await you('Send it'); await think(300);
+    const text = box.querySelector('span').textContent; box.innerHTML = '<span class="ph">Reply to Claude...</span>';
+    addMsg(w, 'u', text); $('#replyT').textContent = 'Sent.'; $('#reply').classList.add('on'); setPill('speaking');
+    await sleep(900); setPill('quiet');
+    addMsg(w, 'a', "On it. I'll start with the login form validation."); await sleep(1500);
+  }},
+  {id:'hold', label:'Hold to type', run: async () => {
+    const w = instant('notes', 300, 142, 680, 420, `<div class="box" style="margin:18px;align-items:flex-start;flex:1"><span class="ph">Meeting notes</span></div>`);
+    await sleep(500); $('#key').classList.add('show'); await sleep(420); $('#key').classList.add('down');
+    await you('Remind the team the launch moves to Friday'); await sleep(200);
+    $('#key').classList.remove('down'); setPill('working'); hideSay();
+    await typeInto(w.querySelector('.box'), 'Remind the team the launch moves to Friday.', 26);
+    setPill(''); await sleep(1500);
+  }},
+  {id:'search', label:'Search the web', run: async () => {
+    setPill('quiet'); await sleep(450);
+    await you('Search for best laptops under 60000'); await think();
+    $('#replyT').textContent = 'Searching now.'; $('#reply').classList.add('on'); setPill('speaking');
+    const w = await openWin('chrome', 210, 142, 860, 436, browserHTML(['best laptops under 60000'], 0));
+    await typeInto(w.querySelector('.url'), 'google.com/search?q=best+laptops+under+60000', 13);
+    const page = w.querySelector('.page-v'); setPill('quiet');
+    for (const [t, s] of [['Best laptops under 60,000 this year','reviews, prices and comparisons'],['Top picks for students and work','updated buying guide'],['Compare laptops by battery and weight','side-by-side specs']]) {
+      page.insertAdjacentHTML('beforeend', `<div class="res"><b>${t}</b><span>${s}</span></div>`); await sleep(260);
+    }
+    await sleep(1700);
+  }},
+  {id:'close', label:'Close and minimize', run: async () => {
+    instant('spotify', 150, 146, 450, 400, `<div class="music"><div><b></b>Now playing</div></div>`);
+    const w = instant('claude', 620, 142, 540, 436, chatHTML); addMsg(w, 'a', 'Anything else?');
+    setPill('quiet'); await sleep(550);
+    await you('Minimize Claude'); await think(300); $('#replyT').textContent = 'Done.'; $('#reply').classList.add('on'); setPill('speaking');
+    await minWin('claude'); focusWin('spotify'); await sleep(650); setPill('quiet'); await sleep(350);
+    await you('Close Spotify'); await think(300); $('#replyT').textContent = 'Closing Spotify.'; $('#reply').classList.add('on'); setPill('speaking');
+    await closeWin('spotify'); await sleep(900); setPill('quiet'); await sleep(350);
+    await you('Open Claude'); await think(280);
+    const o = open.claude; o.el.classList.remove('off'); focusWin('claude'); $('#replyT').textContent = 'Right away.'; $('#reply').classList.add('on'); setPill('speaking');
+    await sleep(1400); setPill('quiet'); await sleep(500);
+  }},
+  {id:'tab', label:'Switch tabs', run: async () => {
+    const w = instant('chrome', 210, 142, 860, 436, browserHTML(['Docs','Pull requests','Gmail','News'], 0));
+    w.querySelector('.url').textContent = 'docs.example.com';
+    w.querySelector('.page-v').innerHTML = `<div class="res"><b>Project documentation</b><span>Getting started</span></div>`;
+    setPill('quiet'); await sleep(550);
+    await you('Go to the Gmail tab'); await think(300);
+    const tabs = [...w.querySelectorAll('.tab')], g = tabs[2];
+    g.classList.add('flash'); await sleep(420);
+    tabs.forEach(t => t.classList.remove('on')); g.classList.remove('flash'); g.classList.add('on');
+    w.querySelector('.url').textContent = 'mail.google.com';
+    w.querySelector('.page-v').innerHTML = `<div class="res"><b>Your invoice is ready</b><span>Billing</span></div><div class="res"><b>Team lunch on Friday?</b><span>Priya</span></div>`;
+    setPill('quiet'); await sleep(900);
+    await you('Close the News tab'); await think(280);
+    tabs[3].classList.add('flash'); await sleep(300); tabs[3].classList.add('bye'); setPill('quiet'); await sleep(1400);
+  }},
+  {id:'ask', label:'Ask ChatGPT or Claude', run: async () => {
+    const w = instant('claude', 250, 142, 780, 436, chatHTML); setPill('quiet'); await sleep(450);
+    await you('Ask Claude what is an SIP'); await think(280);
+    $('#replyT').textContent = 'Asking Claude.'; $('#reply').classList.add('on'); setPill('speaking');
+    const box = w.querySelector('.box'); await typeInto(box, 'What is an SIP?', 28); await sleep(260);
+    addMsg(w, 'u', 'What is an SIP?'); box.innerHTML = '<span class="ph">Reply to Claude...</span>'; setPill('working'); $('#reply').classList.remove('on'); await sleep(600);
+    const m = addMsg(w, 'a', ''); const answer = 'An SIP lets you invest a fixed amount every month. It smooths out market ups and downs over time.';
+    for (const ch of answer) { m.textContent += ch; await sleep(14); if (m.textContent === 'An SIP lets you invest a fixed amount every month.') { $('#replyT').textContent = 'An SIP lets you invest a fixed amount every month.'; $('#reply').classList.add('on'); setPill('speaking'); } }
+    await sleep(1400); $('#replyT').textContent = 'It smooths out market ups and downs over time.'; await sleep(2000); setPill('quiet'); await sleep(400);
+  }},
+  {id:'work', label:'Start work', run: async () => {
+    setPill('quiet'); await sleep(450);
+    await you('Start work'); await think(300);
+    $('#replyT').textContent = 'Getting your workspace ready.'; $('#reply').classList.add('on'); setPill('speaking');
+    await openWin('code', 70, 176, 520, 390, codeHTML('frontend'), 'frontend');
+    await sleep(260); const c = await openWin('term', 690, 176, 520, 190, `<div class="code">&gt; git status<br><u>On main. Nothing to commit.</u></div>`, 'Terminal');
+    await sleep(260); await openWin('chrome', 690, 382, 520, 222, browserHTML(['Dashboard'], 0), 'Chrome: Work profile');
+    await sleep(1500); setPill('quiet'); await sleep(700);
+  }},
+  {id:'remind', label:'Reminders', run: async () => {
+    setPill('quiet'); await sleep(450);
+    await you('Remind me in 20 minutes to call Rahul'); await think(280); await jarvis("I'll remind you at 9:50 AM.", 1500);
+    setPill(''); hideSay();
+    const clock = $('#clock'); clock.classList.add('on');
+    for (let m = 30; m <= 50; m += 2) { clock.textContent = `9:${m} AM`; await sleep(120); }
+    $('#toastT').textContent = 'Call Rahul'; $('#toast').classList.add('on');
+    await jarvis('Reminder: Call Rahul.', 1900); setPill(''); await sleep(600);
+  }},
+  {id:'stop', label:'Jarvis stop', run: async () => {
+    setPill('quiet'); await sleep(350);
+    $('#replyT').textContent = 'Here is a long answer that goes on and on about many different things...'; $('#reply').classList.add('on'); setPill('speaking');
+    await sleep(1500); await you('Jarvis stop'); $('#reply').classList.remove('on');
+    setPill('working'); await sleep(160); await jarvis('Very well.', 700); hideSay(); setPill(''); await sleep(1500);
+  }},
+];
+
+function mirror(source, target) {
+  const update = () => { target.classList.toggle('on', source.classList.contains('on')); target.lastChild.textContent = source.lastChild.textContent; };
+  new MutationObserver(update).observe(source, { attributes: true, childList: true, subtree: true, characterData: true });
+}
+mirror($('#you'), $('#capY')); mirror($('#reply'), $('#capJ'));
+const rail = $('#rail');
+scenes.forEach((s, i) => { const b = document.createElement('button'); b.className = 'chip'; b.textContent = s.label; b.onclick = () => play(i); rail.append(b); });
+
+function reset() {
+  $('#wins').innerHTML = ''; Object.keys(open).forEach(k => delete open[k]);
+  document.querySelectorAll('.ico').forEach(i => i.classList.remove('run', 'act', 'bump'));
+  setPill(''); hideSay(); $('#key').className = 'glass'; $('#toast').classList.remove('on'); $('#clock').classList.remove('on');
+}
+async function play(i) {
+  const mine = ++token; reset();
+  [...rail.children].forEach((c, n) => c.classList.toggle('on', n === i));
+  rail.children[i].scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+  history.replaceState(null, '', '#' + scenes[i].id);
+  const prog = $('#prog'); prog.style.transition = 'none'; prog.style.width = ((i + .001) / scenes.length * 100) + '%';
+  try {
+    await scenes[i].run();
+    prog.style.transition = 'width .5s'; prog.style.width = ((i + 1) / scenes.length * 100) + '%';
+    await sleep(900);
+  } catch (e) { if (e !== STOP) throw e; return; }
+  if (mine === token) play((i + 1) % scenes.length);
+}
+const vp = $('#viewport'), stage = $('#stage');
+new ResizeObserver(() => { stage.style.transform = `scale(${vp.clientWidth / 1280})`; }).observe(vp);
+const start = scenes.findIndex(s => '#' + s.id === location.hash);
+play(start < 0 ? 0 : start);
+</script>
+</body>
+</html>

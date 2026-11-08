@@ -19,6 +19,7 @@ A free, open-source voice assistant for Windows. Say "Hey Jarvis" and control yo
 | Keep talking | After each command it keeps listening, so no wake word is needed. |
 | "Thank you" or "That's all" | Ends the conversation. |
 | "Jarvis stop" | Stops at once, even mid-reply or mid-dictation. |
+| The small icon above the taskbar | Blue bars: listening. Amber spinner: working. Green wave: speaking. |
 
 ### Apps and windows
 
