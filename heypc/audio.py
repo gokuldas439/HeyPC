@@ -158,13 +158,17 @@ class WakeWord:
             embedding_model_path=str(MODELS / "embedding_model.onnx"),
             ncpu=1,
         )
+        self.in_a_row = 0
 
     def heard(self, frame) -> bool:
+        """A real "Hey Jarvis" stays above the threshold for several frames; a stray sound only blips."""
         scores = self.model.predict(frame)
-        return max(scores.values()) >= config.WAKE_THRESHOLD
+        self.in_a_row = self.in_a_row + 1 if max(scores.values()) >= config.WAKE_THRESHOLD else 0
+        return self.in_a_row >= config.WAKE_FRAMES_IN_A_ROW
 
     def reset(self) -> None:
         self.model.reset()
+        self.in_a_row = 0
 
 
 class Hotkey:

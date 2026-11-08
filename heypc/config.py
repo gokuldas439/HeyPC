@@ -22,6 +22,7 @@ FULL_MODEL_MIN_RAM_GB = 7.5
 FULL_MODEL_MIN_CORES = 4
 
 WAKE_THRESHOLD = 0.5
+WAKE_FRAMES_IN_A_ROW = 3  # about a quarter of a second above the threshold
 MIC_MAX_GAIN = 16.0  # how much a quiet voice may be boosted
 
 START_TIMEOUT = 5.0  # seconds to start speaking after "Hey Jarvis"

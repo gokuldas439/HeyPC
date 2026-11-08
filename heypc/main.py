@@ -280,7 +280,8 @@ class Jarvis:
         self.stopped = False
         self.opening_text = ""
         self.long_reply = ""
-        print(f"{datetime.now():%H:%M:%S} woke ({'hotkey' if held else 'voice'})")
+        trigger = "hotkey" if held else "wake model" if spoken is None else "name heard"
+        print(f"{datetime.now():%H:%M:%S} woke ({trigger})")
         chime("listen")
         audio = None
         typed_ahead = spoken or None

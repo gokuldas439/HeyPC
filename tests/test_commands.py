@@ -386,6 +386,26 @@ class SecurityFixTests(unittest.TestCase):
             self.assertEqual(len(file.sha256), 64, file.name)
 
 
+class FalseWakeTests(unittest.TestCase):
+    def wake_with(self, values):
+        wake = audio.WakeWord.__new__(audio.WakeWord)
+        feed = iter(values)
+        wake.model = type("M", (), {"predict": lambda _self, _frame: {"x": next(feed)}, "reset": lambda _self: None})()
+        wake.in_a_row = 0
+        return wake, [wake.heard(None) for _ in values]
+
+    def test_a_brief_blip_does_not_wake(self):
+        self.assertFalse(any(self.wake_with([0.9, 0.1, 0.9, 0.9, 0.1, 0.9])[1]))
+
+    def test_a_sustained_score_wakes(self):
+        self.assertEqual(self.wake_with([0.1, 0.8, 0.9, 0.95])[1], [False, False, False, True])
+
+    def test_reset_clears_the_count(self):
+        wake, _ = self.wake_with([0.9, 0.9])
+        wake.reset()
+        self.assertEqual(wake.in_a_row, 0)
+
+
 class RecognitionTests(unittest.TestCase):
     def test_real_mishearings_from_your_logs(self):
         for heard in ("Open closed.", "Open cloud.", "Open floor.", "Open throw.", "Open clothes.", "Open clawed."):
