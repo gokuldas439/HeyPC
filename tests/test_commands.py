@@ -5,9 +5,9 @@ from pathlib import Path
 
 import numpy as np
 
-from jarvis import actions, app, audio, calc, clipboard, commands, config, files, persona, reminders, routines, setup_ui, summary, terminal, uia
-from jarvis import settings as prefs
-from jarvis.commands import (
+from heypc import actions, app, audio, calc, clipboard, commands, config, files, persona, reminders, routines, setup_ui, summary, terminal, uia
+from heypc import settings as prefs
+from heypc.commands import (
     Action, canon, clean_dictation, is_dismiss, is_risky, is_send_mishearing, is_yes, parse, parse_when, split_send,
 )
 

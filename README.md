@@ -1,12 +1,12 @@
-# Jarvis
+# HeyPC
 
-A free, open-source voice assistant for Windows. Say "Hey Jarvis" and control your PC, dictate into any app, talk to ChatGPT and Claude hands-free, and hear natural replies. No subscription, no account, no API keys.
+A free, open-source voice assistant for Windows. Name your AI anything you like (it's called Jarvis until you do), then control your PC, dictate into any app, talk to ChatGPT and Claude hands-free, and hear natural replies. No subscription, no account, no API keys.
 
-**[Website](https://gokuldas439.github.io/voice-jarvis/) · [See it work](https://gokuldas439.github.io/jarvis-demo/) · [Download for Windows](https://github.com/gokuldas439/voice-jarvis/releases/latest)**
+**[Website](https://gokuldas439.github.io/HeyPC-landing/) · [See it work](https://gokuldas439.github.io/HeyPC-landing/demo.html) · [Download for Windows](https://github.com/gokuldas439/HeyPC/releases/latest)**
 
 ## Commands
 
-**[Download the one-page command sheet (PDF)](docs/Jarvis-Commands.pdf)**
+**[Download the one-page command sheet (PDF)](docs/HeyPC-Commands.pdf)**
 
 ### Getting started
 
@@ -126,7 +126,7 @@ A free, open-source voice assistant for Windows. Say "Hey Jarvis" and control yo
 
 ## Install
 
-1. Download `Jarvis-Setup.exe` from [Releases](https://github.com/gokuldas439/voice-jarvis/releases/latest) (about 700 MB, because the speech models are included).
+1. Download `HeyPC-Setup.exe` from [Releases](https://github.com/gokuldas439/HeyPC/releases/latest) (about 700 MB, because the speech models are included).
 2. If Windows shows "Windows protected your PC", choose **More info**, then **Run anyway**. The installer isn't code-signed because signing certificates cost money.
 3. Finish the setup page. Look for the ring icon in the system tray.
 
@@ -135,28 +135,28 @@ Tested on Windows 11. It needs a microphone and about 2 GB of free RAM; 4 cores 
 ## Privacy
 
 - **Listening and understanding happen on your PC.** Audio is never uploaded or saved.
-- **Online voices** (the default) send only the sentence Jarvis is about to say to Microsoft's read-aloud service. Pick an "offline" voice in Settings to send nothing.
+- **Online voices** (the default) send only the sentence HeyPC is about to say to Microsoft's read-aloud service. Pick an "offline" voice in Settings to send nothing.
 - **Clipboard history** stays in memory, disappears when you quit, and skips anything password managers mark as private.
 - **Logs** don't record what you say unless you turn on the detailed log in Settings.
 - There are no accounts, analytics or telemetry.
 
 ## Safety
 
-Voice commands can act on your PC, so Jarvis is cautious by design:
+Voice commands can act on your PC, so HeyPC is cautious by design:
 
 - Messages, emails with text, shutdown, restart, and clicks on words like "delete" or "pay" need a spoken "yes".
 - Terminal commands come only from a list you control in Settings; spoken words never become commands.
 - Asking to open a file never launches a program. Those are shown in their folder instead.
 
-Please report security problems privately through [GitHub security advisories](https://github.com/gokuldas439/voice-jarvis/security/advisories/new).
+Please report security problems privately through [GitHub security advisories](https://github.com/gokuldas439/HeyPC/security/advisories/new).
 
 ## Good to know
 
 - Bluetooth earphones usually drop to call-quality audio while their microphone is in use.
-- On keyboards where Right Alt types symbols (AltGr), Jarvis automatically leaves that key alone. The wake word and Right Ctrl still work.
+- On keyboards where Right Alt types symbols (AltGr), HeyPC automatically leaves that key alone. The wake word and Right Ctrl still work.
 - Commands are matched by rules, so unusual phrasing may not work. If a name is misheard, say "I meant Claude" and it will remember.
 - Speech recognition is English-only.
-- The online voices use an unofficial service that could change; Jarvis falls back to its offline voice if so.
+- The online voices use an unofficial service that could change; HeyPC falls back to its offline voice if so.
 
 ## Build from source
 
@@ -168,7 +168,7 @@ python -m venv .venv
 .venv\Scripts\python.exe setup_models.py parakeet
 .venv\Scripts\python.exe setup_models.py tiny
 .venv\Scripts\python.exe -m unittest tests.test_commands
-.venv\Scripts\python.exe -m jarvis.app
+.venv\Scripts\python.exe -m heypc.app
 powershell -ExecutionPolicy Bypass -File packaging\build.ps1
 ```
 
@@ -176,4 +176,4 @@ powershell -ExecutionPolicy Bypass -File packaging\build.ps1
 
 [GPL-3.0](LICENSE). Bundled models and libraries have their own terms, listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). In particular, the wake-word models are for **non-commercial use only**.
 
-Jarvis is an independent project and is not affiliated with Marvel or Disney.
+HeyPC is an independent project and is not affiliated with Marvel or Disney.

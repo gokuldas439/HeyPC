@@ -4,12 +4,12 @@ import re
 from .settings import DATA
 
 FILE = DATA / "routines.txt"
-TEMPLATE = """# Say a name in [brackets] and Jarvis does each step below it. Lines starting with # are ignored.
+TEMPLATE = """# Say a name in [brackets] and HeyPC does each step below it. Lines starting with # are ignored.
 # Steps:
 #   cursor C:\\path\\to\\project       opens a folder in Cursor
 #   vscode C:\\path\\to\\project       opens a folder in VS Code
 #   chrome Profile name              opens Chrome in that profile (add a web address after it for a page)
-#   open Spotify                     opens any app or site Jarvis knows
+#   open Spotify                     opens any app or site HeyPC knows
 #   url https://example.com          opens a web page
 #   wait 2                           pauses for that many seconds
 

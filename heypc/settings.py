@@ -7,12 +7,13 @@ import winreg
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 
-DATA = Path(os.environ["APPDATA"]) / "Jarvis"
+DATA = Path(os.environ["APPDATA"]) / "HeyPC"
+_EARLIER_DATA = Path(os.environ["APPDATA"]) / "Jarvis"  # the app's name before it became HeyPC
 FILE = DATA / "settings.json"
 LOG = DATA / "jarvis.log"
 CHECK_LOG = DATA / "check.log"
 RUN_KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
-APP_NAME = "Jarvis"
+APP_NAME = "HeyPC"
 CHROME_STATE = Path(os.environ["LOCALAPPDATA"]) / "Google" / "Chrome" / "User Data" / "Local State"
 MIN_LISTEN, MAX_LISTEN = 5, 120
 MIN_SPEED, MAX_SPEED = 0.9, 1.6
@@ -29,6 +30,13 @@ VOICES = {
     "bm_george": "George (British man, offline)",
     "af_heart": "Heart (American woman, offline)",
 }
+
+
+if _EARLIER_DATA.exists() and not DATA.exists():
+    try:
+        shutil.copytree(_EARLIER_DATA, DATA, ignore=shutil.ignore_patterns("voice-cache", "*.log"))
+    except OSError:
+        pass  # starts with defaults instead
 
 
 @dataclass

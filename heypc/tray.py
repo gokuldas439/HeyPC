@@ -34,8 +34,8 @@ def start_tray(jarvis, open_settings) -> pystray.Icon:
     menu = pystray.Menu(
         pystray.MenuItem("Settings", lambda _icon, _item: open_settings(), default=True),
         pystray.MenuItem("Asleep (ignore wake word)", toggle_sleep, checked=lambda _item: jarvis.asleep),
-        pystray.MenuItem("Quit Jarvis", lambda _icon, _item: os._exit(0)),
+        pystray.MenuItem("Quit HeyPC", lambda _icon, _item: os._exit(0)),
     )
-    icon = pystray.Icon("Jarvis", draw_icon(64), "Jarvis", menu)
+    icon = pystray.Icon("HeyPC", draw_icon(64), "HeyPC", menu)
     icon.run_detached()
     return icon

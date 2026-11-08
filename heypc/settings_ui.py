@@ -18,7 +18,7 @@ FIRST_PROFILE = "First profile"
 def run() -> int:
     current = prefs.load()
     root = tk.Tk()
-    root.title("Jarvis Settings")
+    root.title("HeyPC Settings")
     root.configure(bg=BACKGROUND, padx=28, pady=24)
     root.resizable(False, False)
 
@@ -29,7 +29,7 @@ def run() -> int:
     root.option_add("*TCombobox*Listbox.background", FIELD)
     root.option_add("*TCombobox*Listbox.foreground", TEXT)
 
-    tk.Label(root, text="JARVIS", bg=BACKGROUND, fg=ACCENT, font=("Segoe UI Semibold", 20)).pack(anchor="w")
+    tk.Label(root, text="HeyPC", bg=BACKGROUND, fg=ACCENT, font=("Segoe UI Semibold", 20)).pack(anchor="w")
     tk.Label(root, text="Make it yours.", bg=BACKGROUND, fg=MUTED, font=("Segoe UI", 10)).pack(anchor="w", pady=(0, 14))
 
     def label(text: str, hint: str = "") -> None:
@@ -43,10 +43,10 @@ def run() -> int:
                  font=("Segoe UI", 11), width=42).pack(anchor="w", ipady=6)
         return variable
 
-    label("What should Jarvis call you?", "For example: your name, sir, boss.")
+    label("What should your AI call you?", "For example: your name, sir, boss.")
     user_name = entry(current.user_name)
 
-    label("What do you call Jarvis?", 'The word that wakes it. "Jarvis" is the most accurate; another name works but uses a bit more CPU.')
+    label("What do you call your AI?", 'The word that wakes it. "Jarvis" is the most accurate; another name works but uses a bit more CPU.')
     wake_name = entry(current.wake_name)
 
     label("How long should it wait for your next command?", "Seconds to keep listening after each command, so you don't repeat the wake word.")
@@ -104,7 +104,7 @@ def run() -> int:
     check("Press Enter automatically after typing", enter_after)
     check("Use Right Alt as the talk key", right_alt)
     check("Keep a detailed log for troubleshooting (records what you say)", debug_log)
-    check("Start Jarvis when Windows starts", start_up, prefs.can_start_with_windows())
+    check("Start HeyPC when Windows starts", start_up, prefs.can_start_with_windows())
 
     status = tk.StringVar()
     tk.Label(root, textvariable=status, bg=BACKGROUND, fg=ACCENT, font=("Segoe UI", 9)).pack(anchor="w", pady=(14, 4))
@@ -173,7 +173,7 @@ def run() -> int:
 
     button("Save", save, primary=True)
     button("Hear greeting", test_voice)
-    button("Routines", lambda: edit_file("Jarvis Routines", routines))
-    button("Terminal", lambda: edit_file("Jarvis Terminal Commands", terminal))
+    button("Routines", lambda: edit_file("HeyPC Routines", routines))
+    button("Terminal", lambda: edit_file("HeyPC Terminal Commands", terminal))
     root.mainloop()
     return 0

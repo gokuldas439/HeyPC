@@ -1,4 +1,4 @@
-"""Starts Jarvis. Heavy libraries load only when needed, so the Settings window opens quickly."""
+"""Starts HeyPC. Heavy libraries load only when needed, so the Settings window opens quickly."""
 import ctypes
 import re
 import subprocess
@@ -15,7 +15,7 @@ PRIVATE_LINE = re.compile(r"heard|typing:|summary:|pasting|answer:|file:|learned
 def self_command(*args: str) -> list[str]:
     if getattr(sys, "frozen", False):
         return [sys.executable, *args]
-    return [sys.executable, "-m", "jarvis.app", *args]
+    return [sys.executable, "-m", "heypc.app", *args]
 
 
 def open_settings() -> None:

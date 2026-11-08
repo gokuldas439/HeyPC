@@ -2,7 +2,7 @@
 import sys
 import urllib.request
 
-from jarvis.config import MODELS, speech_tier
+from heypc.config import MODELS, speech_tier
 
 PARAKEET = "https://huggingface.co/csukuangfj/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8/resolve/main"
 TINY = "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en/resolve/main"

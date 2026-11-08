@@ -81,7 +81,7 @@ class Jarvis:
         self.voice.say(line)
         if self.notify:
             try:
-                self.notify(line, "Jarvis")
+                self.notify(line, "HeyPC")
             except Exception as error:
                 print(f"   could not show a notification: {error!r}")
 
@@ -223,7 +223,7 @@ class Jarvis:
             self.guarded(spoken="send it")
 
     def guarded(self, held: bool = False, spoken: str | None = None) -> None:
-        """One failed command, such as an app that will not launch, must not stop Jarvis."""
+        """One failed command, such as an app that will not launch, must not stop HeyPC."""
         self.active = True
         try:
             self.conversation(held, spoken)

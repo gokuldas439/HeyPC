@@ -12,7 +12,7 @@ from .settings_ui import ACCENT, BACKGROUND, FIELD, MUTED, TEXT
 ROUTINE_NAME = "start work"
 EDITORS = {"Cursor": "cursor", "VS Code": "vscode"}
 ONLINE_NOTE = (
-    "Jarvis listens and understands you entirely on this PC. Online voices send only the sentence being spoken to "
+    "HeyPC listens and understands you entirely on this PC. Online voices send only the sentence being spoken to "
     "Microsoft's free read-aloud service; the offline voices send nothing."
 )
 
@@ -44,7 +44,7 @@ def run() -> int:
     steps = list(routines.load().get(ROUTINE_NAME, []))
 
     root = tk.Tk()
-    root.title("Welcome to Jarvis")
+    root.title("Welcome to HeyPC")
     root.configure(bg=BACKGROUND, padx=30, pady=24)
     root.resizable(False, False)
     style = ttk.Style(root)
@@ -54,7 +54,7 @@ def run() -> int:
     root.option_add("*TCombobox*Listbox.background", FIELD)
     root.option_add("*TCombobox*Listbox.foreground", TEXT)
 
-    tk.Label(root, text="Welcome to Jarvis", bg=BACKGROUND, fg=ACCENT, font=("Segoe UI Semibold", 20)).pack(anchor="w")
+    tk.Label(root, text="Welcome to HeyPC", bg=BACKGROUND, fg=ACCENT, font=("Segoe UI Semibold", 20)).pack(anchor="w")
     tk.Label(root, text="A quick setup. You can change all of this later in Settings.", bg=BACKGROUND, fg=MUTED, font=("Segoe UI", 10)).pack(anchor="w", pady=(0, 10))
 
     def label(text: str, hint: str = "") -> None:
@@ -76,7 +76,7 @@ def run() -> int:
         tk.Button(parent, text=text, command=command, relief="flat", cursor="hand2", padx=14, pady=5, font=("Segoe UI Semibold", 9),
                   bg=ACCENT if primary else FIELD, fg=BACKGROUND if primary else TEXT, activebackground=ACCENT, activeforeground=BACKGROUND).pack(side="left", padx=(8, 0))
 
-    label("What should Jarvis call you?")
+    label("What should your AI call you?")
     user_name = entry(row(), "" if current.user_name == prefs.Settings.user_name else current.user_name)
 
     label("What do you want to call your AI?", 'This is the word that wakes it. We suggest "Jarvis", which responds best, but you can pick any name.')
@@ -107,7 +107,7 @@ def run() -> int:
 
     small_button(voice_row, "Hear it", hear)
 
-    label('What should "Start work" open?', 'Saying "Hey Jarvis, start work" opens everything in this list. You can leave it empty.')
+    label('What should "Start work" open?', 'Saying "start work" opens everything in this list. You can leave it empty.')
     listing = tk.Listbox(root, height=5, width=68, bg=FIELD, fg=TEXT, relief="flat", font=("Segoe UI", 10), selectbackground=ACCENT, selectforeground=BACKGROUND, highlightthickness=0)
     listing.pack(anchor="w", ipady=2)
 
@@ -160,7 +160,7 @@ def run() -> int:
     refresh()
 
     start_up = tk.BooleanVar(value=prefs.starts_with_windows())
-    tk.Checkbutton(root, text="Start Jarvis when Windows starts", variable=start_up, bg=BACKGROUND, fg=TEXT, selectcolor=FIELD, activebackground=BACKGROUND,
+    tk.Checkbutton(root, text="Start HeyPC when Windows starts", variable=start_up, bg=BACKGROUND, fg=TEXT, selectcolor=FIELD, activebackground=BACKGROUND,
                    activeforeground=TEXT, font=("Segoe UI", 10), state="normal" if prefs.can_start_with_windows() else "disabled").pack(anchor="w", pady=(12, 0))
 
     tk.Label(root, textvariable=status, bg=BACKGROUND, fg=ACCENT, font=("Segoe UI", 9)).pack(anchor="w", pady=(6, 2))

@@ -1,4 +1,4 @@
-"""Writes docs/Jarvis-Commands.pdf and the command section of README.md from one list.
+"""Writes docs/HeyPC-Commands.pdf and the command section of README.md from one list.
 
 Needs reportlab, which the app itself does not:  pip install reportlab
 """
@@ -13,7 +13,7 @@ from reportlab.lib.units import mm
 from reportlab.platypus import BaseDocTemplate, Frame, FrameBreak, KeepTogether, NextPageTemplate, PageTemplate, Paragraph, Spacer, Table, TableStyle
 
 ROOT = Path(__file__).resolve().parent.parent
-PDF = ROOT / "docs" / "Jarvis-Commands.pdf"
+PDF = ROOT / "docs" / "HeyPC-Commands.pdf"
 README = ROOT / "README.md"
 
 BASICS = [
@@ -146,10 +146,10 @@ def write_pdf() -> None:
         Frame(margin, margin, column, body, 0, 0, 0, 0, id="r1"),
         Frame(margin + column + gap, margin, column, body, 0, 0, 0, 0, id="r2"),
     ])
-    doc = BaseDocTemplate(str(PDF), pagesize=A4, title="Jarvis voice commands", author="Jarvis open-source project", subject="Command cheat sheet")
+    doc = BaseDocTemplate(str(PDF), pagesize=A4, title="HeyPC voice commands", author="HeyPC open-source project", subject="Command cheat sheet")
     doc.addPageTemplates([first, rest])
 
-    story = [NextPageTemplate("rest"), Paragraph("Jarvis voice commands", TITLE), Spacer(1, 2), Paragraph("Say these in your own words. " + escaped(TIPS), LEAD), Spacer(1, 8)]
+    story = [NextPageTemplate("rest"), Paragraph("HeyPC voice commands", TITLE), Spacer(1, 2), Paragraph("Your AI is called Jarvis until you rename it. Say these in your own words. " + escaped(TIPS), LEAD), Spacer(1, 8)]
     data = [[Paragraph(escaped(say), SAY), Paragraph(escaped(does), DOES)] for say, does in BASICS]
     basics = Table(data, colWidths=[62 * mm, page_w - 2 * margin - 62 * mm])
     basics.setStyle(TableStyle([
@@ -169,7 +169,7 @@ def write_readme() -> None:
     def rows(entries) -> str:
         return "\n".join(f"| {say} | {does} |" for say, does in entries)
 
-    parts = ["## Commands\n", "**[Download the one-page command sheet (PDF)](docs/Jarvis-Commands.pdf)**\n"]
+    parts = ["## Commands\n", "**[Download the one-page command sheet (PDF)](docs/HeyPC-Commands.pdf)**\n"]
     parts.append("### Getting started\n\n| Say or do | What happens |\n|---|---|\n" + rows(BASICS) + "\n")
     for name, entries in SECTIONS:
         parts.append(f"### {name}\n\n| Say | What happens |\n|---|---|\n" + rows(entries) + "\n")

@@ -1,6 +1,6 @@
 # Third-party notices
 
-Jarvis is released under the GNU General Public License v3.0 (see `LICENSE`). It bundles or downloads the components below, each under its own terms. The source code for Jarvis is at <https://github.com/gokuldas439/voice-jarvis>.
+HeyPC is released under the GNU General Public License v3.0 (see `LICENSE`). It bundles or downloads the components below, each under its own terms. The source code for HeyPC is at <https://github.com/gokuldas439/HeyPC>.
 
 ## Models
 
@@ -12,7 +12,7 @@ Jarvis is released under the GNU General Public License v3.0 (see `LICENSE`). It
 | Silero VAD | Detecting speech | MIT | <https://github.com/snakers4/silero-vad> |
 | Kokoro v1.0 | Offline voice | Apache 2.0 | <https://huggingface.co/hexgrad/Kokoro-82M> |
 
-The openWakeWord pre-trained models may not be used commercially. Anyone who wants to sell a product based on Jarvis must replace them. The rest of the code does not depend on them: a custom wake word in Settings works without that model's detection path.
+The openWakeWord pre-trained models may not be used commercially. Anyone who wants to sell a product based on HeyPC must replace them. The rest of the code does not depend on them: a custom wake word in Settings works without that model's detection path.
 
 ## Libraries
 
@@ -32,8 +32,8 @@ The openWakeWord pre-trained models may not be used commercially. Anyone who wan
 
 ## Online voices
 
-The default voices use Microsoft's Edge read-aloud service through the community `edge-tts` library. This is not an official Microsoft API, may change or stop working, and is not affiliated with or endorsed by Microsoft. When it is unavailable, Jarvis falls back to the offline voice.
+The default voices use Microsoft's Edge read-aloud service through the community `edge-tts` library. This is not an official Microsoft API, may change or stop working, and is not affiliated with or endorsed by Microsoft. When it is unavailable, HeyPC falls back to the offline voice.
 
 ## Trademarks
 
-Jarvis is an independent open-source project. It is not affiliated with, endorsed by, or sponsored by Marvel, Disney, Microsoft, OpenAI, Anthropic, Google, or any other company named in this project. All trademarks belong to their owners.
+HeyPC is an independent open-source project. It is not affiliated with, endorsed by, or sponsored by Marvel, Disney, Microsoft, OpenAI, Anthropic, Google, or any other company named in this project. All trademarks belong to their owners.

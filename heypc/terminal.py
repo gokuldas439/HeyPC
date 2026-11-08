@@ -12,7 +12,7 @@ TEMPLATE = """# Say a command and a project, such as "git status in backend". On
 # Under [commands], write:  spoken name | another name = the command
 #   Add [project] after the names to limit a line to one project.
 #   Start the command with  terminal:  to open it in a visible terminal tab, for things that keep running.
-#   Start the command with  ask:  to make Jarvis ask for a spoken yes first.
+#   Start the command with  ask:  to make HeyPC ask for a spoken yes first.
 
 [projects]
 

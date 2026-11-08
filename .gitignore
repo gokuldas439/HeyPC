@@ -6,5 +6,5 @@ dist/
 models/
 voice-samples/
 reference/
-packaging/jarvis.ico
+packaging/heypc.ico
 *.log

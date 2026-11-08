@@ -143,7 +143,7 @@ class Overlay:
         try:
             self._run()
         except Exception as error:
-            print(f"   the on-screen indicator stopped: {error!r}")  # Jarvis itself carries on
+            print(f"   the on-screen indicator stopped: {error!r}")  # the rest of HeyPC carries on
 
     def _create_window(self) -> None:
         window_class = win32gui.WNDCLASS()
