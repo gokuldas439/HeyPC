@@ -5,7 +5,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-# The installed app keeps its models next to Jarvis.exe.
+# The installed app keeps its models next to HeyPC.exe.
 ROOT = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
 MODELS = ROOT / "models"
 

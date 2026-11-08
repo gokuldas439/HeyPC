@@ -1,4 +1,4 @@
-"""What you choose in the Settings window, saved in %APPDATA%\\Jarvis."""
+"""What you choose in the Settings window, saved in %APPDATA%\\HeyPC."""
 import json
 import os
 import shutil
