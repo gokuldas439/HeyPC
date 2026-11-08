@@ -7,7 +7,11 @@ from pathlib import Path
 
 # The installed app keeps its models next to HeyPC.exe.
 ROOT = Path(sys.executable).parent if getattr(sys, "frozen", False) else Path(__file__).resolve().parent.parent
-MODELS = ROOT / "models"
+MODELS = ROOT / "models"  # small models that ship with the app
+if getattr(sys, "frozen", False) and not (MODELS / "encoder.int8.onnx").exists():
+    DOWNLOADED_MODELS = Path(os.environ["LOCALAPPDATA"]) / "HeyPC" / "models"  # fetched once on first run
+else:
+    DOWNLOADED_MODELS = MODELS  # building from source, or an older install that already has them
 
 SAMPLE_RATE = 16000
 FRAME_SAMPLES = 1280  # 80 ms, the size the wake word model expects
@@ -30,7 +34,7 @@ TYPE_HOLD_SECONDS = 0.3  # Right Ctrl held this long starts voice typing
 TYPE_RELEASE_TAIL = 0.25  # keep recording this long after release, so the last word isn't cut
 MIN_TYPING_SECONDS = 0.4
 SECONDS_PER_SPOKEN_WORD = 0.45
-SEND_AFTER_TYPING_SECONDS = 180  # "send it" works without the wake word for this long after text is typed
+SEND_AFTER_TYPING_SECONDS = 60  # "send it" works without the wake word for this long after text is typed
 GREETING_GAP_HOURS = 4  # "good morning" again only after this long; otherwise a short "yes, sir?"
 WAKE_POLL = 5.0
 WAKE_PHRASE_MAX_SECONDS = 10

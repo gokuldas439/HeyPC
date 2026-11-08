@@ -123,6 +123,9 @@ SEND_AFTER_SENTENCE = re.compile(r"(?<=[.!?,])\s*(?:send it|send|submit|enter)[.
 SEND_SOUNDS = {"send", "sends", "sent", "sense", "since", "scent", "cents", "sand", "same", "end", "inter", "center", "enter", "ender", "sending", "sand it"}
 SCRATCH_THAT = re.compile(r"[\s,]*\bscratch that\b[\s,.!?]*", re.I)
 MAX_SEND_SOUNDS = 2
+PLAIN_SEND = {"send", "send it"}
+MOSTLY_OWN_WORDS = 0.8
+MIN_WORDS_TO_JUDGE = 4
 SEND_FILLER = {
     "okay", "ok", "uh", "um", "now", "please", "so", "yes", "yeah", "good", "seems", "fine", "jarvis", "hey", "and", "then",
     "just", "it", "that", "this", "in",
@@ -572,12 +575,18 @@ def drop_leading_words(heard: str, spoken: str) -> str:
     """Removes the start of what was heard if it is just Jarvis's own voice picked up by the mic."""
     own = {word.lower() for word in re.findall(r"[\w']+", spoken)}
     words = list(re.finditer(r"[\w']+", heard))
+    if len(words) >= MIN_WORDS_TO_JUDGE and sum(word[0].lower() in own for word in words) / len(words) >= MOSTLY_OWN_WORDS:
+        return ""  # its own voice, even if a few words were misheard; never treat that as a command
     count = 0
     while count < len(words) and words[count][0].lower() in own:
         count += 1
     if count == len(words):
         return ""
     return heard[words[count].start() :] if count >= 2 else heard  # one shared word could be your own ("how are you")
+
+
+def is_plain_send(heard: str) -> bool:
+    return re.sub(r"[^\w\s]", "", heard).strip().lower() in PLAIN_SEND
 
 
 def is_send_mishearing(heard: str) -> bool:

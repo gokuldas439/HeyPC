@@ -18,13 +18,14 @@ TEMPLATE = """# Say a command and a project, such as "git status in backend". On
 
 [commands]
 git status | status = git status --short --branch
-git pull | pull latest | pull = git pull
+git pull | pull latest | pull = ask: git pull
 current branch | branch = git branch --show-current
 git push | push = ask: git push
 start | run | serve = terminal: npm start
 tests | run tests | test = terminal: npm test
-install | npm install | install packages = terminal: npm install
+install | npm install | install packages = ask: terminal: npm install
 """
+CHANGES_THINGS = re.compile(r"\b(?:install|pull|push|merge|rebase|reset|clean|checkout|deploy|publish|delete|remove|rm|del|rmdir|format|force)\b", re.I)
 FILLER = re.compile(r"\b(?:the|my|please|a|in|on|for|of|at|jarvis)\b")
 
 
@@ -119,6 +120,11 @@ def match(heard: str, setup: Setup | None = None) -> tuple[Command, str] | None:
         if score > best_score:
             best, best_score = (command, project), score
     return best if best_score >= FUZZY_MATCH else None
+
+
+def needs_confirmation(line: str) -> bool:
+    """Commands that change code or install things always need a spoken yes, whatever the list says."""
+    return bool(CHANGES_THINGS.search(line))
 
 
 def find(name: str, project: str, setup: Setup | None = None) -> Command | None:

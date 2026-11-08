@@ -18,12 +18,13 @@ import sounddevice as sd
 import soundfile
 from kokoro_onnx import Kokoro
 
-from .config import MODELS, thread_count
+from .config import DOWNLOADED_MODELS, thread_count
 from .settings import DATA, Settings
 
-MODEL_FILE = MODELS / "kokoro" / "kokoro-v1.0.int8.onnx"
-VOICES_FILE = MODELS / "kokoro" / "voices-v1.0.bin"
-CACHE = DATA / "voice-cache"
+MODEL_FILE = DOWNLOADED_MODELS / "kokoro" / "kokoro-v1.0.int8.onnx"
+VOICES_FILE = DOWNLOADED_MODELS / "kokoro" / "voices-v1.0.bin"
+CACHE = DATA / "voice-replies"
+EARLIER_CACHE = DATA / "voice-cache"  # kept every line spoken, so it is removed
 SAMPLE_RATE = 24000
 RECENT_LINES = 4
 ONLINE_VOICE_PREFIX = "en-"
@@ -64,6 +65,7 @@ class Voice:
         self.name = name
         self.lines: queue.Queue = queue.Queue()
         self.to_prepare: deque = deque()
+        self.standard_lines: set = set()  # only these are saved to disk; summaries and AI replies never are
         self.said: deque = deque(maxlen=RECENT_LINES)
         self.tail_until = 0.0
         self.engine = None
@@ -86,6 +88,7 @@ class Voice:
 
     def prepare(self, lines: list[str]) -> None:
         """Queues the usual replies for quiet moments."""
+        self.standard_lines = set(lines)
         self.to_prepare = deque(lines)
 
     def busy(self) -> bool:
@@ -146,6 +149,8 @@ class Voice:
                 return self._render_offline(text, OFFLINE_BACKUP_VOICE)
         else:
             samples, rate = self._render_offline(text, self.name)
+        if text not in self.standard_lines:
+            return samples, rate
         path.parent.mkdir(parents=True, exist_ok=True)
         partial = path.with_suffix(".tmp.npy")
         np.save(partial, samples)
@@ -153,6 +158,7 @@ class Voice:
         return samples, rate
 
     def _drop_other_voices(self) -> None:
+        shutil.rmtree(EARLIER_CACHE, ignore_errors=True)
         if CACHE.exists():
             for folder in CACHE.iterdir():
                 if folder != self._folder():

@@ -426,7 +426,7 @@ class Actions:
             return
         files.show_in_folder(path)
         if open_it:
-            self.speak(f"{name} is a program, so I've shown it in its folder instead of running it.")
+            self.speak(f"For safety, I've shown {name} in its folder instead of opening it.")
         else:
             self.speak(f"Found {name}." + (f" {others} more match, and this is the newest." if others == 1 else f" {others} more match, and this is the newest." if others else ""))
 
@@ -437,7 +437,7 @@ class Actions:
         if not command or not folder or not Path(folder).is_dir():
             print(f"   can't run {name!r} in {project!r}")
             return False
-        if command.ask and not self._confirm(f"Run {name} in {project}? Say yes."):
+        if (command.ask or terminal.needs_confirmation(command.line)) and not self._confirm(f"Run {name} in {project}? Say yes."):
             print("   cancelled")
             return True
         print(f"   {project}> {command.line}")

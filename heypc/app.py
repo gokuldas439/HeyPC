@@ -4,12 +4,13 @@ import re
 import subprocess
 import sys
 
+from . import downloads
 from . import settings as prefs
 
 MUTEX_NAME = "VoiceJarvisSingleInstance"
 ERROR_ALREADY_EXISTS = 183
 PER_MONITOR_AWARE = 2
-PRIVATE_LINE = re.compile(r"heard|typing:|summary:|pasting|answer:|file:|learned:|opening http|tab:|Reminder:|Time's up|\w> |chat with|sounds like|Send this|Run .* Say yes")
+SAFE_LINE = re.compile(r"\s*(?:Loading speech model|microphone:|microphone \S+ did not open|Ready\.|audio devices changed|microphone stopped|\d\d:\d\d:\d\d woke|that failed|voice typing failed|voice did not load|could not speak|online voice unavailable|could not check audio|could not prepare|could not show a notification|the on-screen indicator stopped|reminder check failed|clipboard check failed|model download failed|window items readable|audio devices:|voice produced|CHECK OK)")
 
 
 def self_command(*args: str) -> list[str]:
@@ -20,6 +21,10 @@ def self_command(*args: str) -> list[str]:
 
 def open_settings() -> None:
     subprocess.Popen(self_command("--settings"))
+
+
+def _models_ready() -> bool:
+    return not downloads.needed() or subprocess.run(self_command("--models")).returncode == 0
 
 
 def open_setup() -> None:
@@ -35,12 +40,14 @@ class _PrivateLog:
         self.skipping = False
 
     def write(self, text: str) -> None:
-        if text == "\n" and self.skipping:
+        if text == "\n":
+            if not self.skipping:
+                self.stream.write(text)
             self.skipping = False
             return
-        self.skipping = not self.keep_everything and bool(PRIVATE_LINE.search(text))
+        self.skipping = not self.keep_everything and not SAFE_LINE.match(text)
         if not self.skipping:
-            self.stream.write(text)
+            self.stream.write(text if self.keep_everything else text.split("(", 1)[0])  # error details can quote what you said
 
     def flush(self) -> None:
         self.stream.flush()
@@ -74,6 +81,10 @@ def _check() -> int:
 
 
 def main() -> int:
+    if "--models" in sys.argv:
+        from .download_ui import run
+
+        return run()
     if "--setup" in sys.argv:
         from .setup_ui import run
 
@@ -97,6 +108,8 @@ def main() -> int:
     if not prefs.is_saved():
         prefs.save(prefs.load())
         open_setup()
+    if not _models_ready():
+        return 1
 
     from .main import Jarvis
     from .overlay import Overlay
@@ -104,7 +117,7 @@ def main() -> int:
 
     try:
         jarvis = Jarvis()
-        jarvis.notify = start_tray(jarvis, open_settings).notify
+        jarvis.notify = start_tray(jarvis, open_settings, open_setup).notify
         Overlay(jarvis.display_state).start()
         jarvis.run()
     except KeyboardInterrupt:

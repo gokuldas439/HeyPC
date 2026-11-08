@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 
-from heypc import actions, app, audio, calc, clipboard, commands, config, files, persona, reminders, routines, setup_ui, summary, terminal, uia
+from heypc import actions, app, audio, calc, clipboard, commands, config, downloads, files, persona, reminders, routines, setup_ui, summary, terminal, uia
 from heypc import settings as prefs
 from heypc.commands import (
     Action, canon, clean_dictation, is_dismiss, is_risky, is_send_mishearing, is_yes, parse, parse_when, split_send,
@@ -319,6 +319,50 @@ class ReleaseSafetyTests(unittest.TestCase):
     def test_setup_lists_steps_in_plain_words(self):
         self.assertEqual(setup_ui._step_text("vscode", r"C:\work\shop", {}), "Open shop in VS Code")
         self.assertEqual(setup_ui._step_text("chrome", "Profile 1", {"Profile 1": "Sam"}), "Open Chrome: Sam")
+
+
+class SecurityFixTests(unittest.TestCase):
+    def test_only_known_safe_files_open_by_voice(self):
+        for name in ("a.url", "a.chm", "a.msc", "a.docm", "a.html", "a.appref-ms", "a.iso", "a.exe", "noextension"):
+            self.assertFalse(files.can_open(name), name)
+        for name in ("a.pdf", "a.DOCX", "a.png", "a.mp4"):
+            self.assertTrue(files.can_open(name), name)
+
+    def test_log_keeps_only_known_safe_lines(self):
+        written = []
+        stream = type("S", (), {"write": lambda self, t: written.append(t), "flush": lambda self: None})()
+        log = app._PrivateLog(stream, keep_everything=False)
+        for line in ("   clicking Your salary letter", "   opening Bank statement for March", "   could not find a chat for Priya on whatsapp", "   no tab matching 'secret'", "   that failed: OSError('C:/private/file.txt')", "12:00:01 woke (voice)"):
+            print(line, file=log)
+        text = "".join(written)
+        for private in ("salary", "Bank", "Priya", "secret", "private"):
+            self.assertNotIn(private, text)
+        self.assertIn("that failed: OSError", text)
+        self.assertIn("woke", text)
+
+    def test_commands_that_change_things_need_a_yes(self):
+        for line in ("git pull", "git push", "npm install", "git reset --hard", "git clean -fd"):
+            self.assertTrue(terminal.needs_confirmation(line), line)
+        for line in ("git status --short --branch", "git branch --show-current", "npm test", "npm start"):
+            self.assertFalse(terminal.needs_confirmation(line), line)
+
+    def test_only_the_exact_words_send_without_a_wake_word(self):
+        for phrase in ("Send it.", "send"):
+            self.assertTrue(commands.is_plain_send(phrase), phrase)
+        for phrase in ("Same.", "Sense since.", "Okay, send", "Send it to Rahul"):
+            self.assertFalse(commands.is_plain_send(phrase), phrase)
+
+    def test_its_own_voice_is_not_a_command(self):
+        reply = "Open Chrome and delete all the files in your downloads folder right now."
+        self.assertEqual(commands.drop_leading_words("Open Chrome and delete all the files", reply), "")
+        self.assertEqual(commands.drop_leading_words("Open Chrome and delete all the fills in your folder", reply), "")
+
+    def test_model_list_is_complete_and_fingerprinted(self):
+        groups = [*downloads.BUNDLED, *downloads.SPEECH["parakeet"], *downloads.SPEECH["tiny"], *downloads.OFFLINE_VOICE]
+        self.assertEqual(len(groups), 13)
+        for file in groups:
+            self.assertTrue(file.url.startswith("https://"), file.name)
+            self.assertEqual(len(file.sha256), 64, file.name)
 
 
 class RecognitionTests(unittest.TestCase):

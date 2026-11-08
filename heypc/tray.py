@@ -27,12 +27,13 @@ def draw_icon(size: int = 256) -> Image.Image:
     return image.resize((size, size), Image.LANCZOS)
 
 
-def start_tray(jarvis, open_settings) -> pystray.Icon:
+def start_tray(jarvis, open_settings, open_setup) -> pystray.Icon:
     def toggle_sleep(_icon, _item) -> None:
         jarvis.asleep = not jarvis.asleep
 
     menu = pystray.Menu(
         pystray.MenuItem("Settings", lambda _icon, _item: open_settings(), default=True),
+        pystray.MenuItem("Run setup again", lambda _icon, _item: open_setup()),
         pystray.MenuItem("Asleep (ignore wake word)", toggle_sleep, checked=lambda _item: jarvis.asleep),
         pystray.MenuItem("Quit HeyPC", lambda _icon, _item: os._exit(0)),
     )

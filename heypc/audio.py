@@ -16,7 +16,7 @@ from pycaw.pycaw import IMMDeviceEnumerator
 from pynput import keyboard as pynput_keyboard
 
 from . import config
-from .config import FRAME_SAMPLES, MODELS, SAMPLE_RATE
+from .config import DOWNLOADED_MODELS, FRAME_SAMPLES, MODELS, SAMPLE_RATE
 
 VAD_WINDOW = 512
 LONG_AUDIO_SECONDS = 25
@@ -319,19 +319,19 @@ class Transcriber:
         threads = config.thread_count()
         if self.tier == "parakeet":
             self.recognizer = sherpa_onnx.OfflineRecognizer.from_transducer(
-                encoder=str(MODELS / "encoder.int8.onnx"),
-                decoder=str(MODELS / "decoder.int8.onnx"),
-                joiner=str(MODELS / "joiner.int8.onnx"),
-                tokens=str(MODELS / "tokens.txt"),
+                encoder=str(DOWNLOADED_MODELS / "encoder.int8.onnx"),
+                decoder=str(DOWNLOADED_MODELS / "decoder.int8.onnx"),
+                joiner=str(DOWNLOADED_MODELS / "joiner.int8.onnx"),
+                tokens=str(DOWNLOADED_MODELS / "tokens.txt"),
                 model_type="nemo_transducer",
                 num_threads=threads,
                 decoding_method="greedy_search",
             )
         else:
             self.recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
-                encoder=str(MODELS / "tiny.en-encoder.int8.onnx"),
-                decoder=str(MODELS / "tiny.en-decoder.int8.onnx"),
-                tokens=str(MODELS / "tiny.en-tokens.txt"),
+                encoder=str(DOWNLOADED_MODELS / "tiny.en-encoder.int8.onnx"),
+                decoder=str(DOWNLOADED_MODELS / "tiny.en-decoder.int8.onnx"),
+                tokens=str(DOWNLOADED_MODELS / "tiny.en-tokens.txt"),
                 language="en",
                 task="transcribe",
                 num_threads=threads,

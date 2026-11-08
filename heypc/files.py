@@ -21,9 +21,10 @@ KINDS = {
     "video": (".mp4", ".mkv", ".mov", ".avi", ".webm"),
 }
 EXTRA_WORDS = {"file", "files", "the", "my", "a", "an", "called", "named", "latest", "last", "newest", "recent", "most"}
-# Never launched by voice, because one misheard word could run a program. These are shown in their folder instead.
-DO_NOT_RUN = {
-    ".exe", ".msi", ".bat", ".cmd", ".com", ".scr", ".ps1", ".vbs", ".vbe", ".js", ".jse", ".wsf", ".wsh", ".lnk", ".reg", ".hta", ".jar", ".pif", ".cpl",
+# Only these open by voice. Anything else, including programs, scripts, shortcuts and macro documents, is shown in its folder.
+SAFE_TO_OPEN = {
+    ".pdf", ".txt", ".rtf", ".md", ".csv", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".odt", ".ods", ".odp",
+    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".heic", ".mp3", ".wav", ".m4a", ".flac", ".mp4", ".mkv", ".mov", ".avi", ".webm",
 }
 NOT_FINISHED = {".crdownload", ".tmp", ".part", ".partial"}
 WALK_FOLDERS = ("Downloads", "Documents", "Desktop", "OneDrive")
@@ -48,7 +49,8 @@ def split_query(spoken: str) -> tuple[list[str], tuple]:
 def _from_index(words: list[str], types: tuple, limit: int) -> list[str]:
     import win32com.client
 
-    conditions = [f"SCOPE='file:{HOME.as_posix()}'", "System.ItemType <> 'Directory'", "NOT System.ItemPathDisplay LIKE '%\\AppData\\%'", "NOT System.ItemPathDisplay LIKE '%node_modules%'"]
+    home = HOME.as_posix().replace("'", "''")
+    conditions = [f"SCOPE='file:{home}'", "System.ItemType <> 'Directory'", "NOT System.ItemPathDisplay LIKE '%\\AppData\\%'", "NOT System.ItemPathDisplay LIKE '%node_modules%'"]
     conditions += [f"System.FileName LIKE '%{word}%'" for word in words]  # words are letters and digits only
     if types:
         conditions.append("(" + " OR ".join(f"System.FileExtension = '{extension}'" for extension in types) + ")")
@@ -127,4 +129,4 @@ def show_in_folder(path: str) -> None:
 
 
 def can_open(path: str) -> bool:
-    return Path(path).suffix.lower() not in DO_NOT_RUN
+    return Path(path).suffix.lower() in SAFE_TO_OPEN

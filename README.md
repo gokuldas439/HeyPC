@@ -126,7 +126,7 @@ A free, open-source voice assistant for Windows. Name your AI anything you like 
 
 ## Install
 
-1. Download `HeyPC-Setup.exe` from [Releases](https://github.com/gokuldas439/HeyPC/releases/latest) (about 700 MB, because the speech models are included).
+1. Download `HeyPC-Setup.exe` from [Releases](https://github.com/gokuldas439/HeyPC/releases/latest) (a small download; on first run it fetches about 750 MB of speech models once).
 2. If Windows shows "Windows protected your PC", choose **More info**, then **Run anyway**. The installer isn't code-signed because signing certificates cost money.
 3. Finish the setup page. Look for the ring icon in the system tray.
 
@@ -138,6 +138,8 @@ Tested on Windows 11. It needs a microphone and about 2 GB of free RAM; 4 cores 
 - **Online voices** (the default) send only the sentence HeyPC is about to say to Microsoft's read-aloud service. Pick an "offline" voice in Settings to send nothing.
 - **Clipboard history** stays in memory, disappears when you quit, and skips anything password managers mark as private.
 - **Logs** don't record what you say unless you turn on the detailed log in Settings.
+- **First-run downloads** of the speech models come from Hugging Face and GitHub, and each file is checked against a fingerprint.
+- **Saved replies:** only Jarvis's short standard replies are kept on disk. Summaries and AI answers aren't.
 - There are no accounts, analytics or telemetry.
 
 ## Safety
@@ -146,7 +148,8 @@ Voice commands can act on your PC, so HeyPC is cautious by design:
 
 - Messages, emails with text, shutdown, restart, and clicks on words like "delete" or "pay" need a spoken "yes".
 - Terminal commands come only from a list you control in Settings; spoken words never become commands.
-- Asking to open a file never launches a program. Those are shown in their folder instead.
+- Only known-safe file types open by voice. Programs, scripts and shortcuts are shown in their folder instead.
+- Anything that can change your code or install packages needs a spoken "yes", even if it's on your list.
 
 Please report security problems privately through [GitHub security advisories](https://github.com/gokuldas439/HeyPC/security/advisories/new).
 

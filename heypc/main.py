@@ -10,7 +10,7 @@ from .actions import Actions
 from .clipboard import ClipboardHistory
 from .audio import Hotkey, Mic, Recorder, Transcriber, WakeWord, audio_device_state, chime
 from .commands import (
-    Action, clean_dictation, drop_leading_words, is_cancel, is_stop_phrase, is_dismiss, is_send_mishearing, is_yes, parse, says_stop, split_send,
+    Action, clean_dictation, drop_leading_words, is_cancel, is_plain_send, is_stop_phrase, is_dismiss, is_send_mishearing, is_yes, parse, says_stop, split_send,
     strip_wake, text_after_wake_name,
 )
 from .reminders import Reminders
@@ -144,8 +144,8 @@ class Jarvis:
         self.mic_state = self.read_device_state() or ""
         self.mic.start()
         self.hotkey.start()
-        self.say(persona.online())
         self.voice.prepare(persona.all_lines(self.name))
+        self.say(persona.online())
         self.reminders.start()
         self.clipboard_history.start()
         print(f'Ready. Say "{self.settings.wake_name}", or tap or hold Right Alt.')
@@ -218,7 +218,7 @@ class Jarvis:
         rest = text_after_wake_name(heard)
         if rest is not None:
             self.guarded(spoken=rest)
-        elif self.just_typed and is_send_mishearing(heard):
+        elif self.just_typed and is_plain_send(heard):  # no wake word, so only the exact words count
             print(f'heard without the wake word: "{heard}"')
             self.guarded(spoken="send it")
 
