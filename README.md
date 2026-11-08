@@ -65,7 +65,7 @@ A free, open-source voice assistant for Windows. Name your AI anything you like 
 
 | Say | What happens |
 |---|---|
-| "Ask Claude what is an SIP" | Asks, then reads the start of the reply |
+| "Ask Claude what is an SIP" | Sends it. Say "Summarize the response" to hear it |
 | "Ask ChatGPT ..." | Same, in ChatGPT |
 | "New chat" / "New chat in ChatGPT" | Starts a fresh chat |
 | "Summarize the response" | Reads a short summary aloud |

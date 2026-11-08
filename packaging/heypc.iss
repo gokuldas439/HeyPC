@@ -3,7 +3,7 @@
 [Setup]
 AppId={{B6E2F3A1-7C4D-4E58-9A21-5D0C8E1F7A42}
 AppName=HeyPC
-AppVersion=1.3.1
+AppVersion=1.3.2
 AppPublisher=gokuldas439
 AppPublisherURL=https://github.com/gokuldas439/HeyPC
 LicenseFile=..\LICENSE

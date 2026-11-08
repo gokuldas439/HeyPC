@@ -28,6 +28,7 @@ MIN_RESULT_WIDTH = 180
 FUZZY_MATCH = 0.82
 MAX_WORDS_IN_A_NAME = 6
 EDIT = 50004
+TOOLBAR = 50021
 MESSAGE_BOX = re.compile(r"prompt|message|reply|ask|chat|write", re.I)
 NOT_RESULTS = re.compile(r"^(?:skip to|accessibility|feedback|sign in|learn more)", re.I)
 

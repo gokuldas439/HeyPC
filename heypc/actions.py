@@ -36,10 +36,6 @@ AI_APPS = ("claude", "chatgpt", "codex")
 NEW_CHAT_BUTTONS = ["New chat", "New conversation", "New session", "New thread", "New task", "New"]
 NEW_CHAT_SETTLE = 0.6
 ASK_SETTLE = 0.25
-REPLY_TIMEOUT = 60.0
-REPLY_QUIET_SECONDS = 2.5  # no new text for this long means the reply has finished
-REPLY_POLL_SECONDS = 0.3
-MAX_REPLY_WORDS = 45
 ROUTINE_STEP_GAP = 0.8
 MIN_APP_NAME = 3
 NEVER_CONTROL = {"jarvis.exe", "textinputhost.exe", "applicationframehost.exe", "searchhost.exe", "startmenuexperiencehost.exe"}
@@ -208,7 +204,7 @@ class Actions:
         return winctl.paste_text(cleaned)
 
     def ask_ai(self, app: str, question: str) -> bool:
-        """Sends your question to ChatGPT or Claude and reads the start of the reply as it appears."""
+        """Sends your question to ChatGPT or Claude. The reply is only read out if you ask for a summary."""
         question = question or (self.hear() if self.hear else "")
         if not question:
             return True
@@ -217,42 +213,13 @@ class Actions:
         time.sleep(NEW_CHAT_SETTLE)
         if winctl.front_exe() in winctl.BROWSERS:
             time.sleep(WEB_LOAD_WAIT)
-        before = set(summary.text_blocks(uia.scan()))
         uia.focus_message_box()
         time.sleep(ASK_SETTLE)
         if not self.type_text(question):
             return False
         time.sleep(ASK_SETTLE)
         winctl.press_named("send")
-        self._read_reply_as_it_arrives(question, before)
         return True
-
-    def _read_reply_as_it_arrives(self, question: str, before: set[str]) -> None:
-        give_up_at = time.monotonic() + REPLY_TIMEOUT
-        said = words = 0
-        previous, changed_at = "", time.monotonic()
-        while time.monotonic() < give_up_at:
-            reply = summary.reply_text(summary.text_blocks(uia.scan()), question, before)
-            if reply != previous:
-                previous, changed_at = reply, time.monotonic()
-            finished = bool(reply) and time.monotonic() - changed_at >= REPLY_QUIET_SECONDS
-            sentences = summary.finished_sentences(reply, finished)
-            reached_limit = False
-            while said < len(sentences) and not reached_limit:
-                size = len(sentences[said].split())
-                reached_limit = said > 0 and words + size > MAX_REPLY_WORDS
-                if not reached_limit:
-                    self.speak(sentences[said])
-                    words += size
-                    said += 1
-            if finished or reached_limit:
-                if said:
-                    return
-                break
-            time.sleep(REPLY_POLL_SECONDS)
-        if not said:
-            print("   no reply appeared in time")
-            self.speak("I couldn't read the reply.")
 
     def _ai_app_in_front(self) -> str | None:
         exe, title = winctl.front_exe(), winctl.front_title()
@@ -310,8 +277,11 @@ class Actions:
 
     def summarize(self) -> bool:
         """Reads a short summary of the latest chat reply, Google's AI answer, or the page on screen."""
-        text = self._copied_latest_reply(uia.scan()) if self._ai_app_in_front() else ""
-        short = summary.summarize_text(text or self._answer_on_page())
+        text = None
+        if self._ai_app_in_front():
+            items = uia.scan()
+            text = self._copied_latest_reply(items) or summary.labelled_reply(items)
+        short = summary.summarize_text(self._answer_on_page() if text is None else text)
         if not short:
             print("   could not find a response to summarize")
             return False

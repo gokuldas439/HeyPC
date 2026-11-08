@@ -406,6 +406,47 @@ class FalseWakeTests(unittest.TestCase):
         self.assertEqual(wake.in_a_row, 0)
 
 
+class LabelledReplyTests(unittest.TestCase):
+    """Built from how the real Claude app exposes a conversation."""
+
+    HINT = "Opus 5.5 Medium Fast mode off Arrow keys move the tile. Perpendicular arrow keys resize. Enter or Escape to cancel."
+
+    def item(self, name, kind=uia.TEXT, top=0, bottom=20):
+        return uia.Item(name, kind, 0, top, 10, bottom, False, None)
+
+    def window(self, *body):
+        return [
+            self.item("You said: An old question.", top=10, bottom=12), self.item("An old question.", top=14, bottom=30),
+            self.item("Claude responded: An old answer.", top=40, bottom=42), self.item("An old answer here.", top=44, bottom=60),
+            self.item("Message actions", uia.TOOLBAR), self.item("Copy", uia.BUTTON, top=70, bottom=90), *body,
+            self.item("Session details", uia.GROUP), self.item("Chat mode", top=780, bottom=800), self.item(self.HINT, top=810, bottom=830),
+        ]
+
+    def asked(self):
+        return [self.item("You said: Who is it?", top=100, bottom=102), self.item("Who is it?", top=104, bottom=120)]
+
+    def test_reads_only_the_newest_reply(self):
+        items = self.window(
+            *self.asked(), self.item("Claude responded: Preview.", top=130, bottom=132), self.item("Mahatma Gandhi", top=130, bottom=150),
+            self.item("is called the father of the nation.", top=130, bottom=150), self.item("It is an honorary title.", top=180, bottom=200),
+            self.item("Message actions", uia.TOOLBAR, top=210, bottom=230), self.item("Just now", top=212, bottom=228),
+        )
+        self.assertEqual(summary.labelled_reply(items), "Mahatma Gandhi is called the father of the nation.\nIt is an honorary title.")
+
+    def test_the_keyboard_hint_is_never_the_reply(self):
+        self.assertEqual(summary.labelled_reply(self.window(*self.asked())), "")
+
+    def test_apps_without_labels_use_the_older_method(self):
+        self.assertIsNone(summary.labelled_reply([self.item("Hello there")]))
+
+    def test_an_older_replys_copy_button_is_not_used_while_writing(self):
+        self.assertIsNone(summary.lowest_copy_button(self.window(*self.asked())))
+
+    def test_the_finished_replys_copy_button_is_used(self):
+        items = self.window(*self.asked(), self.item("Copy", uia.BUTTON, top=300, bottom=320))
+        self.assertEqual(summary.lowest_copy_button(items).top, 300)
+
+
 class RecognitionTests(unittest.TestCase):
     def test_real_mishearings_from_your_logs(self):
         for heard in ("Open closed.", "Open cloud.", "Open floor.", "Open throw.", "Open clothes.", "Open clawed."):
@@ -440,28 +481,6 @@ class AskAiTests(unittest.TestCase):
         self.assertEqual(parse("Ask cloud about mutual funds."), [Action("ask_ai", "mutual funds.", "claude")])
         self.assertEqual(parse("Ask Claude."), [Action("ask_ai", "", "claude")])
         self.assertEqual(parse("Tell Priya on Slack that the build passed."), [Action("message", "Priya", "slack", "the build passed.")])
-
-    def test_reply_is_what_comes_after_the_question(self):
-        blocks = ["Earlier question", "Earlier answer here for you.", "What is an SIP?", "An SIP is a way to invest regularly.", "Claude can make mistakes."]
-        self.assertEqual(summary.reply_text(blocks, "what is an SIP?", set()), "An SIP is a way to invest regularly.")
-
-    def test_question_and_reply_merged_into_one_block(self):
-        blocks = ["Earlier answer here. What is an SIP and how does it work? An SIP is a way to invest regularly."]
-        self.assertEqual(summary.reply_text(blocks, "What is an SIP and how does it work", set()), "An SIP is a way to invest regularly.")
-
-    def test_long_question_is_not_read_back(self):
-        question = "one two three four five six seven eight nine ten eleven"
-        self.assertEqual(summary.reply_text([f"{question.title()}?\nThe real reply is here."], question, set()), "The real reply is here.")
-
-    def test_new_text_used_when_question_not_found(self):
-        self.assertEqual(summary.reply_text(["Old text", "New reply text"], "something else", {"Old text"}), "New reply text")
-
-    def test_half_finished_sentences_wait(self):
-        reply = "An SIP is a way to invest regularly. It lets you put in"
-        self.assertEqual(summary.finished_sentences(reply, False), ["An SIP is a way to invest regularly."])
-        self.assertEqual(summary.finished_sentences(reply, True), ["An SIP is a way to invest regularly.", "It lets you put in"])
-        self.assertEqual(summary.finished_sentences("It is a", False), [])
-
 
 class VoiceTypingTests(unittest.TestCase):
     class Key:

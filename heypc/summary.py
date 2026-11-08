@@ -10,7 +10,9 @@ from . import uia
 MAX_SUMMARY_WORDS = 45
 MIN_SENTENCE_WORDS = 4
 MIN_PARAGRAPH_WORDS = 8
-CHAT_FURNITURE = re.compile(r"can make mistakes|double-check|please check|Reply to|^Thinking|^Searching|Sonnet|Opus|GPT-\d", re.I)
+YOU_SAID = re.compile(r"^You said:", re.I)
+AI_RESPONDED = re.compile(r"^\w+ responded:", re.I)
+OUTSIDE_REPLY = re.compile(r"^(?:Message \d+|Session details)$", re.I)
 MAX_FILLER_WORDS = 8 # "Sure, here you go" is filler; a long sentence starting "Here are" can be the answer
 PAGE_FURNITURE = re.compile(r"skip to main content|accessibility help|filter\. not selected", re.I)
 MAX_INLINE_LINK_WORDS = 4  # short links sit inside sentences; long ones are page titles
@@ -76,14 +78,17 @@ def summarize_text(text: str, max_words: int = MAX_SUMMARY_WORDS) -> str:
     return " ".join(sentences[index] for index in sorted(chosen))
 
 
+def _is_reading_text(item: uia.Item) -> bool:
+    return item.kind == uia.TEXT or (item.kind == uia.HYPERLINK and len(item.name.split()) <= MAX_INLINE_LINK_WORDS)
+
+
 def text_blocks(items: list[uia.Item]) -> list[str]:
     """Rebuilds paragraphs from the many small pieces of text a web page reports."""
     area = uia.web_area(items)
-    pieces = [
-        i for i in items
-        if (i.kind == uia.TEXT or (i.kind == uia.HYPERLINK and len(i.name.split()) <= MAX_INLINE_LINK_WORDS))
-        and (not area or (i.top >= area.top and i.bottom <= area.bottom))
-    ]
+    return _paragraphs([i for i in items if _is_reading_text(i) and (not area or (i.top >= area.top and i.bottom <= area.bottom))])
+
+
+def _paragraphs(pieces: list[uia.Item]) -> list[str]:
     blocks: list[str] = []
     current: list[str] = []
     previous = None
@@ -116,35 +121,36 @@ def page_text(blocks: list[str]) -> str:
     return "\n".join(block for block in blocks if len(block.split()) >= MIN_PARAGRAPH_WORDS and not PAGE_FURNITURE.search(block))
 
 
-def _trim_reply(tail: str) -> str:
-    """Drops the app's own notices one sentence at a time, because they can share a line with the reply."""
-    kept = []
-    for line in tail.splitlines():
-        parts = [part for part in SENTENCE_END.split(line.strip()) if part and not CHAT_FURNITURE.search(part)]
-        if parts:
-            kept.append(" ".join(parts))
-    return "\n".join(kept).lstrip(" ?.!\n")
+def _asked_indexes(items: list[uia.Item]) -> list[int]:
+    return [index for index, item in enumerate(items) if item.kind == uia.TEXT and YOU_SAID.match(item.name)]
 
 
-def reply_text(blocks: list[str], question: str, before: set[str]) -> str:
-    """The AI's reply so far: what appears after your question, or failing that, whatever is new on screen."""
-    words = re.findall(r"[a-z0-9']+", question.lower())
-    text = "\n".join(blocks)
-    matches = list(re.finditer(r"\W+".join(map(re.escape, words)), text, re.I)) if words else []
-    if matches:
-        return _trim_reply(text[matches[-1].end() :])
-    return _trim_reply("\n".join(block for block in blocks if block not in before))
+def labelled_reply(items: list[uia.Item]) -> str | None:
+    """The reply to your newest message, in apps that label each message for screen readers.
 
-
-def finished_sentences(reply: str, final: bool) -> list[str]:
-    """Sentences that are safe to read out: while a reply is still arriving, the last part may be half a sentence."""
-    if not final:
-        endings = [position for position in (reply.rfind(mark) for mark in ".!?\n") if position >= 0]
-        reply = reply[: max(endings) + 1] if endings else ""
-    return [sentence for sentence in _sentences(reply) if not CHAT_FURNITURE.search(sentence)]
+    Returns None if this app has no such labels, and "" if that reply hasn't started to appear.
+    """
+    asked = _asked_indexes(items)
+    if not asked:
+        return None
+    start = next((index for index in range(asked[-1], len(items)) if items[index].kind == uia.TEXT and AI_RESPONDED.match(items[index].name)), None)
+    if start is None:
+        return ""
+    pieces = []
+    for item in items[start + 1 :]:
+        if item.kind == uia.TOOLBAR or (item.kind == uia.GROUP and OUTSIDE_REPLY.match(item.name)):
+            break
+        if _is_reading_text(item):
+            pieces.append(item)
+    return "\n".join(_paragraphs(pieces))
 
 
 def lowest_copy_button(items: list[uia.Item]) -> uia.Item | None:
-    """Chat apps put a Copy button under each reply, so the lowest one belongs to the latest reply."""
+    """Chat apps put a Copy button under each reply, so the lowest one belongs to the latest reply.
+
+    One above your newest question belongs to an older reply: the new one is still being written.
+    """
     buttons = [i for i in items if i.kind in uia.CLICKABLE and COPY_BUTTON.match(i.name.strip())]
-    return max(buttons, key=lambda i: i.top, default=None)
+    lowest = max(buttons, key=lambda i: i.top, default=None)
+    asked = _asked_indexes(items)
+    return None if lowest and asked and lowest.top < items[asked[-1]].top else lowest
