@@ -13,6 +13,7 @@ CHUNK = 1024 * 1024
 TIMEOUT = 30
 ATTEMPTS = 6
 RETRY_WAIT = 3
+BACKUP_RELEASE = "https://github.com/gokuldas439/HeyPC/releases/download/models-v1/"
 
 
 @dataclass(frozen=True)
@@ -62,7 +63,11 @@ def _fingerprint(path: Path) -> str:
     return digest.hexdigest()
 
 
-def fetch(file: ModelFile, folder: Path, on_bytes) -> None:
+def backup_url(file: ModelFile) -> str:
+    return BACKUP_RELEASE + Path(file.name).name
+
+
+def fetch(file: ModelFile, folder: Path, on_bytes, url: str | None = None) -> None:
     """Downloads one file, carrying on from where an earlier attempt stopped."""
     target = folder / file.name
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -71,7 +76,7 @@ def fetch(file: ModelFile, folder: Path, on_bytes) -> None:
     if have >= file.size:
         partial.unlink()
         have = 0
-    request = urllib.request.Request(file.url, headers={"User-Agent": "HeyPC", **({"Range": f"bytes={have}-"} if have else {})})
+    request = urllib.request.Request(url or file.url, headers={"User-Agent": "HeyPC", **({"Range": f"bytes={have}-"} if have else {})})
     with urllib.request.urlopen(request, timeout=TIMEOUT) as response:
         if have and response.status != 206:  # the server won't resume, so start this file over
             have = 0
@@ -89,10 +94,11 @@ def fetch(file: ModelFile, folder: Path, on_bytes) -> None:
 
 
 def download_all(files: list[ModelFile], on_progress, folder: Path | None = None) -> None:
-    """Calls on_progress(bytes done so far). Retries each file, so a dropped connection doesn't end the setup."""
+    """Calls on_progress(bytes done so far). Retries alternate with the backup copy, which has the same fingerprints."""
     folder = folder or DOWNLOADED_MODELS
     finished = 0
     for file in files:
+        sources = (file.url, backup_url(file))
         for attempt in range(1, ATTEMPTS + 1):
             current = [0]
 
@@ -101,7 +107,7 @@ def download_all(files: list[ModelFile], on_progress, folder: Path | None = None
                 on_progress(finished + current[0])
 
             try:
-                fetch(file, folder, count)
+                fetch(file, folder, count, sources[(attempt - 1) % len(sources)])
                 break
             except (OSError, ValueError, urllib.error.URLError):
                 if attempt == ATTEMPTS:

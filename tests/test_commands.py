@@ -357,6 +357,27 @@ class SecurityFixTests(unittest.TestCase):
         self.assertEqual(commands.drop_leading_words("Open Chrome and delete all the files", reply), "")
         self.assertEqual(commands.drop_leading_words("Open Chrome and delete all the fills in your folder", reply), "")
 
+    def test_backup_copy_is_used_when_the_original_link_fails(self):
+        file = downloads.OFFLINE_VOICE[1]
+        tried = []
+
+        def fake_fetch(_file, _folder, _on_bytes, url):
+            tried.append(url)
+            if url == file.url:
+                raise OSError("gone")
+
+        real_fetch, real_sleep = downloads.fetch, downloads.time.sleep
+        downloads.fetch, downloads.time.sleep = fake_fetch, lambda _seconds: None
+        try:
+            downloads.download_all([file], lambda _done: None)
+        finally:
+            downloads.fetch, downloads.time.sleep = real_fetch, real_sleep
+        self.assertEqual(tried, [file.url, downloads.BACKUP_RELEASE + "voices-v1.0.bin"])
+
+    def test_backup_names_do_not_clash(self):
+        everything = [*downloads.SPEECH["parakeet"], *downloads.SPEECH["tiny"], *downloads.OFFLINE_VOICE]
+        self.assertEqual(len({downloads.backup_url(file) for file in everything}), 9)
+
     def test_model_list_is_complete_and_fingerprinted(self):
         groups = [*downloads.BUNDLED, *downloads.SPEECH["parakeet"], *downloads.SPEECH["tiny"], *downloads.OFFLINE_VOICE]
         self.assertEqual(len(groups), 13)
