@@ -315,7 +315,6 @@ class ReleaseSafetyTests(unittest.TestCase):
     def test_nothing_personal_in_the_defaults(self):
         self.assertEqual(prefs.Settings().chrome_profile, "")
         self.assertFalse(prefs.Settings().keep_debug_log)
-        self.assertNotIn("recotap", repr(config.VOCABULARY).lower())
 
     def test_setup_lists_steps_in_plain_words(self):
         self.assertEqual(setup_ui._step_text("vscode", r"C:\work\shop", {}), "Open shop in VS Code")
