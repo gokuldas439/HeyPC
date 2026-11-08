@@ -37,6 +37,8 @@ h1{font:700 clamp(38px,6.4vw,74px)/1.04 Sora,sans-serif;letter-spacing:-.03em;ma
 h1 span{background:linear-gradient(100deg,var(--cyan),var(--mint) 60%,var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
 header.top p{color:var(--muted);font-size:clamp(16px,2vw,20px);margin:14px auto 0;max-width:36em}
 
+.nameit{text-align:center;color:var(--muted);font-size:16px;margin:0 0 12px}
+.nameit b{color:var(--text);font-weight:600}
 .rail{display:flex;gap:8px;overflow-x:auto;padding:10px;border-radius:18px;margin-bottom:12px;scrollbar-width:none}
 .rail::-webkit-scrollbar{display:none}
 .chip{flex:none;font:600 14px Inter,sans-serif;color:var(--muted);padding:9px 15px;border-radius:11px;border:1px solid transparent;background:none;cursor:pointer;white-space:nowrap}
@@ -155,6 +157,7 @@ body.embed,html:has(body.embed){background:transparent}
     <p>This is what appears on your Windows screen when you talk to Jarvis. Pick any command below.</p>
   </header>
 
+  <p class="nameit">Name your AI anything you like. Here we call it <b>Jarvis</b>.</p>
   <div class="rail glass" id="rail" role="tablist" aria-label="Choose a command to watch"></div>
   <div class="frame glass">
     <div class="viewport" id="viewport">

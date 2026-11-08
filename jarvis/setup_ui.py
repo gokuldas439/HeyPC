@@ -79,6 +79,9 @@ def run() -> int:
     label("What should Jarvis call you?")
     user_name = entry(row(), "" if current.user_name == prefs.Settings.user_name else current.user_name)
 
+    label("What do you want to call your AI?", 'This is the word that wakes it. We suggest "Jarvis", which responds best, but you can pick any name.')
+    wake_name = entry(row(), current.wake_name)
+
     label("Voice", ONLINE_NOTE)
     voice_ids = {text: key for key, text in prefs.VOICES.items()}
     voice_row = row()
@@ -165,6 +168,7 @@ def run() -> int:
     def finish() -> None:
         prefs.save(prefs.Settings(
             user_name=" ".join(user_name.get().split()) or prefs.Settings.user_name,
+            wake_name=" ".join(wake_name.get().split()) or prefs.Settings.wake_name,
             voice=voice_ids[voice_choice.get()],
         ))
         if prefs.can_start_with_windows():
