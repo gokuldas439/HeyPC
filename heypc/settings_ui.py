@@ -13,13 +13,54 @@ TEXT = "#e6f1ff"
 MUTED = "#8ba3c7"
 ACCENT = "#4fd1ff"
 FIRST_PROFILE = "First profile"
+WHEEL_NOTCH = 120
+SCREEN_ROOM = 130  # leaves space for the title bar and the taskbar
+
+
+def scrolling_page(root: tk.Tk, padx: int, pady: int):
+    """Lays out a window whose page scrolls when it's taller than the screen and whose footer stays visible.
+
+    Returns the page, the footer, and a function to call once everything has been added.
+    """
+    ttk.Style(root).configure("Vertical.TScrollbar", background=FIELD, troughcolor=BACKGROUND, bordercolor=BACKGROUND,
+                              arrowcolor=ACCENT, lightcolor=FIELD, darkcolor=FIELD)
+    root.unbind_class("TCombobox", "<MouseWheel>")  # scrolling past a dropdown must not change its value
+    footer = tk.Frame(root, bg=BACKGROUND, padx=padx, pady=12)
+    footer.pack(side="bottom", fill="x")
+    canvas = tk.Canvas(root, bg=BACKGROUND, highlightthickness=0)
+    bar = ttk.Scrollbar(root, orient="vertical", command=canvas.yview)
+    canvas.configure(yscrollcommand=bar.set)
+    canvas.pack(side="left", fill="both", expand=True)
+    page = tk.Frame(canvas, bg=BACKGROUND, padx=padx, pady=pady)
+    canvas.create_window(0, 0, window=page, anchor="nw")
+
+    def on_wheel(event) -> None:
+        widget = event.widget  # a dropdown's open list arrives as plain text; lists and other windows scroll themselves
+        if isinstance(widget, tk.Misc) and not isinstance(widget, tk.Listbox) and widget.winfo_toplevel() is root:
+            canvas.yview_scroll(-event.delta // WHEEL_NOTCH, "units")
+
+    def fit() -> None:
+        root.update_idletasks()
+        width = max(page.winfo_reqwidth(), footer.winfo_reqwidth())
+        height = page.winfo_reqheight()
+        room = root.winfo_screenheight() - SCREEN_ROOM - footer.winfo_reqheight()
+        canvas.configure(width=width, height=min(height, room), scrollregion=(0, 0, width, height))
+        if height > room:
+            bar.pack(side="right", fill="y", before=canvas)
+        root.update_idletasks()
+        x = (root.winfo_screenwidth() - root.winfo_reqwidth()) // 2
+        y = (root.winfo_screenheight() - SCREEN_ROOM - root.winfo_reqheight()) // 2 + 10
+        root.geometry(f"+{x}+{y}")
+
+    canvas.bind_all("<MouseWheel>", on_wheel)
+    return page, footer, fit
 
 
 def run() -> int:
     current = prefs.load()
     root = tk.Tk()
     root.title("HeyPC Settings")
-    root.configure(bg=BACKGROUND, padx=28, pady=24)
+    root.configure(bg=BACKGROUND)
     root.resizable(False, False)
 
     style = ttk.Style(root)
@@ -28,18 +69,19 @@ def run() -> int:
     style.map("TCombobox", fieldbackground=[("readonly", FIELD)], foreground=[("readonly", TEXT)])
     root.option_add("*TCombobox*Listbox.background", FIELD)
     root.option_add("*TCombobox*Listbox.foreground", TEXT)
+    page, footer, fit = scrolling_page(root, 28, 24)
 
-    tk.Label(root, text="HeyPC", bg=BACKGROUND, fg=ACCENT, font=("Segoe UI Semibold", 20)).pack(anchor="w")
-    tk.Label(root, text="Make it yours.", bg=BACKGROUND, fg=MUTED, font=("Segoe UI", 10)).pack(anchor="w", pady=(0, 14))
+    tk.Label(page, text="HeyPC", bg=BACKGROUND, fg=ACCENT, font=("Segoe UI Semibold", 20)).pack(anchor="w")
+    tk.Label(page, text="Make it yours.", bg=BACKGROUND, fg=MUTED, font=("Segoe UI", 10)).pack(anchor="w", pady=(0, 14))
 
     def label(text: str, hint: str = "") -> None:
-        tk.Label(root, text=text, bg=BACKGROUND, fg=TEXT, font=("Segoe UI Semibold", 10)).pack(anchor="w", pady=(10, 2))
+        tk.Label(page, text=text, bg=BACKGROUND, fg=TEXT, font=("Segoe UI Semibold", 10)).pack(anchor="w", pady=(10, 2))
         if hint:
-            tk.Label(root, text=hint, bg=BACKGROUND, fg=MUTED, font=("Segoe UI", 9), wraplength=400, justify="left").pack(anchor="w", pady=(0, 3))
+            tk.Label(page, text=hint, bg=BACKGROUND, fg=MUTED, font=("Segoe UI", 9), wraplength=400, justify="left").pack(anchor="w", pady=(0, 3))
 
     def entry(value: str) -> tk.StringVar:
         variable = tk.StringVar(value=value)
-        tk.Entry(root, textvariable=variable, bg=FIELD, fg=TEXT, insertbackground=ACCENT, relief="flat",
+        tk.Entry(page, textvariable=variable, bg=FIELD, fg=TEXT, insertbackground=ACCENT, relief="flat",
                  font=("Segoe UI", 11), width=42).pack(anchor="w", ipady=6)
         return variable
 
@@ -51,7 +93,7 @@ def run() -> int:
 
     label("How long should it wait for your next command?", "Seconds to keep listening after each command, so you don't repeat the wake word.")
     seconds = tk.IntVar(value=current.listen_seconds)
-    tk.Spinbox(root, from_=prefs.MIN_LISTEN, to=prefs.MAX_LISTEN, textvariable=seconds, width=6, bg=FIELD, fg=TEXT,
+    tk.Spinbox(page, from_=prefs.MIN_LISTEN, to=prefs.MAX_LISTEN, textvariable=seconds, width=6, bg=FIELD, fg=TEXT,
                buttonbackground=FIELD, relief="flat", insertbackground=ACCENT, font=("Segoe UI", 11)).pack(anchor="w", ipady=4)
 
     import sounddevice as sd
@@ -65,16 +107,16 @@ def run() -> int:
     label("Microphone", "Automatic switches to earphones or glasses as soon as they connect.")
     mic_names = [automatic, *microphones, *([current.microphone] if current.microphone and current.microphone not in microphones else [])]
     microphone = tk.StringVar(value=current.microphone or automatic)
-    ttk.Combobox(root, textvariable=microphone, values=mic_names, state="readonly", width=44, font=("Segoe UI", 10)).pack(anchor="w", ipady=3)
+    ttk.Combobox(page, textvariable=microphone, values=mic_names, state="readonly", width=44, font=("Segoe UI", 10)).pack(anchor="w", ipady=3)
 
     label("Voice", 'Pick one, then use "Hear greeting" below.')
     voice_ids = {text: key for key, text in prefs.VOICES.items()}
     voice_choice = tk.StringVar(value=prefs.VOICES.get(current.voice, next(iter(voice_ids))))
-    ttk.Combobox(root, textvariable=voice_choice, values=list(voice_ids), state="readonly", width=44, font=("Segoe UI", 10)).pack(anchor="w", ipady=3)
+    ttk.Combobox(page, textvariable=voice_choice, values=list(voice_ids), state="readonly", width=44, font=("Segoe UI", 10)).pack(anchor="w", ipady=3)
 
     label("How fast should Jarvis speak?", 'Higher is quicker. Use "Hear greeting" below to try it.')
     speed = tk.DoubleVar(value=current.voice_speed)
-    tk.Scale(root, from_=prefs.MIN_SPEED, to=prefs.MAX_SPEED, resolution=0.05, orient="horizontal", variable=speed, length=380,
+    tk.Scale(page, from_=prefs.MIN_SPEED, to=prefs.MAX_SPEED, resolution=0.05, orient="horizontal", variable=speed, length=380,
              bg=BACKGROUND, fg=TEXT, troughcolor=FIELD, activebackground=ACCENT, highlightthickness=0, relief="flat",
              font=("Segoe UI", 9)).pack(anchor="w")
 
@@ -88,7 +130,7 @@ def run() -> int:
     label("Chrome profile", "Which profile opens when you ask for Chrome.")
     selected = next((text for text, folder in choices.items() if folder == current.chrome_profile), names[0])
     profile = tk.StringVar(value=selected)
-    ttk.Combobox(root, textvariable=profile, values=names, state="readonly", width=44, font=("Segoe UI", 10)).pack(anchor="w", ipady=3)
+    ttk.Combobox(page, textvariable=profile, values=names, state="readonly", width=44, font=("Segoe UI", 10)).pack(anchor="w", ipady=3)
 
     talk_back = tk.BooleanVar(value=current.talk_back)
     enter_after = tk.BooleanVar(value=current.enter_after_typing)
@@ -97,7 +139,7 @@ def run() -> int:
     start_up = tk.BooleanVar(value=prefs.starts_with_windows())
 
     def check(text: str, variable: tk.BooleanVar, enabled: bool = True) -> None:
-        tk.Checkbutton(root, text=text, variable=variable, bg=BACKGROUND, fg=TEXT, selectcolor=FIELD, activebackground=BACKGROUND,
+        tk.Checkbutton(page, text=text, variable=variable, bg=BACKGROUND, fg=TEXT, selectcolor=FIELD, activebackground=BACKGROUND,
                        activeforeground=TEXT, font=("Segoe UI", 10), state="normal" if enabled else "disabled").pack(anchor="w", pady=(10, 0))
 
     check("Talk back to me", talk_back)
@@ -107,8 +149,8 @@ def run() -> int:
     check("Start HeyPC when Windows starts", start_up, prefs.can_start_with_windows())
 
     status = tk.StringVar()
-    tk.Label(root, textvariable=status, bg=BACKGROUND, fg=ACCENT, font=("Segoe UI", 9)).pack(anchor="w", pady=(14, 4))
-    row = tk.Frame(root, bg=BACKGROUND)
+    tk.Label(footer, textvariable=status, bg=BACKGROUND, fg=ACCENT, font=("Segoe UI", 9)).pack(anchor="w", pady=(0, 4))
+    row = tk.Frame(footer, bg=BACKGROUND)
     row.pack(anchor="w")
 
     def clean_name(variable: tk.StringVar, fallback: str) -> str:
@@ -175,5 +217,6 @@ def run() -> int:
     button("Hear greeting", test_voice)
     button("Routines", lambda: edit_file("HeyPC Routines", routines))
     button("Terminal", lambda: edit_file("HeyPC Terminal Commands", terminal))
+    fit()
     root.mainloop()
     return 0

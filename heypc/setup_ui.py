@@ -7,7 +7,7 @@ from tkinter import filedialog, ttk
 
 from . import routines, terminal
 from . import settings as prefs
-from .settings_ui import ACCENT, BACKGROUND, FIELD, MUTED, TEXT
+from .settings_ui import ACCENT, BACKGROUND, FIELD, MUTED, TEXT, scrolling_page
 
 ROUTINE_NAME = "start work"
 EDITORS = {"Cursor": "cursor", "VS Code": "vscode"}
@@ -45,7 +45,7 @@ def run() -> int:
 
     root = tk.Tk()
     root.title("Welcome to HeyPC")
-    root.configure(bg=BACKGROUND, padx=30, pady=24)
+    root.configure(bg=BACKGROUND)
     root.resizable(False, False)
     style = ttk.Style(root)
     style.theme_use("clam")
@@ -53,14 +53,15 @@ def run() -> int:
     style.map("TCombobox", fieldbackground=[("readonly", FIELD)], foreground=[("readonly", TEXT)])
     root.option_add("*TCombobox*Listbox.background", FIELD)
     root.option_add("*TCombobox*Listbox.foreground", TEXT)
+    page, footer, fit = scrolling_page(root, 30, 24)
 
-    tk.Label(root, text="Welcome to HeyPC", bg=BACKGROUND, fg=ACCENT, font=("Segoe UI Semibold", 20)).pack(anchor="w")
-    tk.Label(root, text="A quick setup. You can change all of this later in Settings.", bg=BACKGROUND, fg=MUTED, font=("Segoe UI", 10)).pack(anchor="w", pady=(0, 10))
+    tk.Label(page, text="Welcome to HeyPC", bg=BACKGROUND, fg=ACCENT, font=("Segoe UI Semibold", 20)).pack(anchor="w")
+    tk.Label(page, text="A quick setup. You can change all of this later in Settings.", bg=BACKGROUND, fg=MUTED, font=("Segoe UI", 10)).pack(anchor="w", pady=(0, 10))
 
     def label(text: str, hint: str = "") -> None:
-        tk.Label(root, text=text, bg=BACKGROUND, fg=TEXT, font=("Segoe UI Semibold", 10)).pack(anchor="w", pady=(10, 2))
+        tk.Label(page, text=text, bg=BACKGROUND, fg=TEXT, font=("Segoe UI Semibold", 10)).pack(anchor="w", pady=(10, 2))
         if hint:
-            tk.Label(root, text=hint, bg=BACKGROUND, fg=MUTED, font=("Segoe UI", 9), wraplength=500, justify="left").pack(anchor="w", pady=(0, 3))
+            tk.Label(page, text=hint, bg=BACKGROUND, fg=MUTED, font=("Segoe UI", 9), wraplength=500, justify="left").pack(anchor="w", pady=(0, 3))
 
     def entry(parent, value: str = "", width: int = 54) -> tk.StringVar:
         variable = tk.StringVar(value=value)
@@ -68,7 +69,7 @@ def run() -> int:
         return variable
 
     def row() -> tk.Frame:
-        frame = tk.Frame(root, bg=BACKGROUND)
+        frame = tk.Frame(page, bg=BACKGROUND)
         frame.pack(anchor="w", pady=(4, 0))
         return frame
 
@@ -108,7 +109,7 @@ def run() -> int:
     small_button(voice_row, "Hear it", hear)
 
     label('What should "Start work" open?', 'Saying "start work" opens everything in this list. You can leave it empty.')
-    listing = tk.Listbox(root, height=5, width=68, bg=FIELD, fg=TEXT, relief="flat", font=("Segoe UI", 10), selectbackground=ACCENT, selectforeground=BACKGROUND, highlightthickness=0)
+    listing = tk.Listbox(page, height=5, width=68, bg=FIELD, fg=TEXT, relief="flat", font=("Segoe UI", 10), selectbackground=ACCENT, selectforeground=BACKGROUND, highlightthickness=0)
     listing.pack(anchor="w", ipady=2)
 
     def refresh() -> None:
@@ -160,10 +161,10 @@ def run() -> int:
     refresh()
 
     start_up = tk.BooleanVar(value=prefs.starts_with_windows())
-    tk.Checkbutton(root, text="Start HeyPC when Windows starts", variable=start_up, bg=BACKGROUND, fg=TEXT, selectcolor=FIELD, activebackground=BACKGROUND,
+    tk.Checkbutton(page, text="Start HeyPC when Windows starts", variable=start_up, bg=BACKGROUND, fg=TEXT, selectcolor=FIELD, activebackground=BACKGROUND,
                    activeforeground=TEXT, font=("Segoe UI", 10), state="normal" if prefs.can_start_with_windows() else "disabled").pack(anchor="w", pady=(12, 0))
 
-    tk.Label(root, textvariable=status, bg=BACKGROUND, fg=ACCENT, font=("Segoe UI", 9)).pack(anchor="w", pady=(6, 2))
+    tk.Label(footer, textvariable=status, bg=BACKGROUND, fg=ACCENT, font=("Segoe UI", 9)).pack(anchor="w", pady=(6, 2))
 
     def finish() -> None:
         prefs.save(prefs.Settings(
@@ -178,9 +179,10 @@ def run() -> int:
         _seed_terminal_projects(steps)
         root.destroy()
 
-    finish_row = tk.Frame(root, bg=BACKGROUND)
+    finish_row = tk.Frame(footer, bg=BACKGROUND)
     finish_row.pack(anchor="w")
     tk.Button(finish_row, text="Finish setup", command=finish, relief="flat", cursor="hand2", padx=22, pady=8, font=("Segoe UI Semibold", 11), bg=ACCENT, fg=BACKGROUND,
               activebackground=ACCENT, activeforeground=BACKGROUND).pack(side="left")
+    fit()
     root.mainloop()
     return 0
